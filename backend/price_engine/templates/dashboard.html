@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Local read-only price history monitoring dashboard">
+  <title>Price Signal — Agent Dashboard</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+  <script src="/static/dashboard.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">P<span>.</span></span><span>PRICE<span class="brand-light">SIGNAL</span><small>AGENT CONSOLE</small></span></div>
+      <div class="nav-head">WORKSPACE</div>
+      <nav aria-label="Primary navigation"><a class="nav-active" href="/">▦ <span>Overview</span></a></nav>
+      <div class="sidebar-footer"><span class="pulse-dot"></span>Local read-only workspace <small>v0.4 · SQLite</small></div>
+    </aside>
+    <main>
+      <header class="topbar"><div class="eyebrow">INTELLIGENCE / MONITOR</div><div class="topbar-right"><span id="synced" aria-live="polite">Connecting…</span><span class="avatar">PA</span></div></header>
+      <div class="content">
+        <div class="heading"><div><div class="eyebrow accent">OPERATIONS OVERVIEW</div><h1>Track every <em>price move.</em></h1><p>Verified observations from your local append-only price history.</p></div><button id="refresh" type="button" class="refresh">↻ <span>Refresh data</span></button></div>
+        <section class="metrics" aria-label="Overview statistics">
+          <article class="metric"><span>ACTIVE LISTINGS</span><strong id="metric-listings">—</strong><small>Retailer listings monitored</small></article>
+          <article class="metric"><span>VALID PRICES</span><strong id="metric-valid">—</strong><small>Latest observations accepted</small></article>
+          <article class="metric"><span>OUT OF STOCK</span><strong id="metric-out">—</strong><small>Verified unavailable inventory</small></article>
+          <article class="metric"><span>QUARANTINED</span><strong id="metric-quarantine">—</strong><small>Flagged for data review</small></article>
+        </section>
+        <section class="panel" aria-labelledby="listings-heading"><div class="panel-heading"><div><h2 id="listings-heading">Tracked listings</h2><p>Prices are shown only for accepted, in-stock observations. Stale checks are labelled.</p></div><div class="panel-tools"><input type="search" id="filter" placeholder="Search products or retailers" aria-label="Search listings"><span class="chip">30-day trends</span></div></div>
+          <div class="table-scroll"><table><thead><tr><th>PRODUCT</th><th>LAST ACCEPTED PRICE</th><th>STATUS</th><th>30D TREND</th><th>LAST OBSERVED</th></tr></thead><tbody id="listings"><tr><td colspan="5" class="empty">Loading local observations…</td></tr></tbody></table></div>
+          <div class="panel-foot"><span id="count">—</span><span class="quiet">Auto-refresh every 30 seconds</span></div>
+        </section>
+        <section class="bottom-grid" aria-label="System status and data policy"><div class="panel mini"><div class="panel-heading"><h2>Ingestion health</h2><span id="health-dot" class="health-dot"></span></div><div class="health-line"><span>Price history database</span><strong id="db-status">Checking</strong></div><div class="health-line"><span>Scheduler</span><strong id="scheduler-status">Checking</strong></div><div class="health-line"><span>Most recent observation</span><strong id="last-check">—</strong></div><div class="notice">Manual ingestion is disabled until a policy-approved scheduler is configured.</div></div>
+        <div class="panel mini"><div class="panel-heading"><h2>Data integrity</h2><span class="shield">READ ONLY</span></div><p class="integrity">Every trend comes from accepted, in-stock INR observations stored as integer paisa. Quarantined entries are never shown as live prices.</p><div class="integrity-footer"><span>Source</span><code>price_history · SQLite WAL</code></div></div></section>
+        <footer>PRICE SIGNAL <span>·</span> Internal monitoring workspace <span>·</span> No retailer requests from this dashboard</footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

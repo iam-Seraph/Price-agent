@@ -1,0 +1,4 @@
+-r requirements-dashboard.txt
+mypy>=1.14,<2
+hypothesis>=6,<7
+pytest>=8,<10
