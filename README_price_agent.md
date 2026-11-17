@@ -62,3 +62,16 @@ The `.env.example` file is safe to publish because it contains a placeholder, no
 
 ## Groq API configuration
 Copy `.env.example` to `.env`, set `GROQ_API_KEY` locally, and leave `AI_PROVIDER=groq`. Install dependencies using `pip install -r requirements.txt`. Run offline checks with `python price_agent.py`, then invoke the model using `python price_agent.py --product headphones-a --budget 280`. This uses Groq's OpenAI-compatible endpoint. The script uses simulated catalog data by default; it is not a real retailer price monitor. Never commit `.env`. `git status --short` should not show it. The live Groq API call requires your own key and may incur charges.
+
+## NEW: Live product price checker with Rich terminal display
+
+The `live_price.py` command retrieves **current publicly exposed page data** from an HTTPS product URL and prints a styled table. It supports common structured Product JSON-LD and product price meta tags. It is separate from the Groq-powered mock-data ReAct agent; the two modes are not yet integrated.
+
+```bash
+pip install -r requirements.txt
+python live_price.py --url "https://www.amazon.in/YOUR-PRODUCT-PAGE" --budget 3000 --currency INR
+```
+
+Supported retailer domains currently include amazon.in, amazon.com, flipkart.com, croma.com, reliancedigital.in, myntra.com, bestbuy.com, and walmart.com. These are *permitted input domains*, not guaranteed working integrations: stores may require JavaScript, block bots, redirect, or omit structured price data. Follow each retailer's terms and access restrictions. No CAPTCHA bypass is implemented. The tool never guesses a missing price, stock, seller rating, or history. **Within budget is not proof of a genuine discount.** Currency mismatches are not compared. The tool does not track prices over time yet.
+
+This command uses live HTTP requests; `python price_agent.py` continues to run the original mock-data AI workflow.
