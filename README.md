@@ -139,3 +139,15 @@ Price-agent/
 ## Release history
 
 - **2026-11-18:** Phase 2 hardening + Phase 4 dashboard merged from `audit/hardening` to `main` through [PR #1](https://github.com/iam-Seraph/Price-agent/pull/1); merge commit `89f6b0fa343502797ba697252afb021497ac0b66`. Five branch commits, 28 changed files, no force-push.
+
+## Phase 5 — searchable real-product catalog (feature branch)
+
+This branch adds a separate SQLite catalog with an import target of **1,000,000
+real Open Food Facts records**, indexed FTS5 name/brand/category search and a
+local read-only **/catalog** page. The database itself is NOT committed or
+automatically downloaded. The import output and the stats API report the true
+unique product count. This source does **not** contain verified store prices;
+the existing AI agent and retailer history remain separate.
+
+See [PHASE5.md](PHASE5.md) for the bulk export source, ODbL attribution,
+PowerShell commands, tests, database limitations and upgrade boundaries.
