@@ -82,7 +82,7 @@ class RealCatalogTests(unittest.TestCase):
             self.assertEqual(entries[0]["source_url"],
                              "https://world.openfoodfacts.org/product/0000000012345")
             self.assertNotIn("price_paisa", entries[0])
-            self.assertEqual(client.get("/api/catalog/search", params={"q": "Example Oats"}).json()["items"], [])
+            self.assertEqual(client.get("/api/catalog/search", params={"q": "Cereals"}).json()["items"], [])
             self.assertEqual(len(client.get("/api/catalog/search", params={"q": "oats"}).json()["items"]), 1)
             self.assertEqual(len(client.get("/api/catalog/search", params={"q": "' OR *"}).json()["items"]), 0)
             first_page = client.get("/api/catalog/search", params={"limit": 1})
