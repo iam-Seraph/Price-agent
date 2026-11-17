@@ -1,6 +1,7 @@
 """ReAct price checker: offline tests plus optional OpenAI-compatible API agent."""
 import argparse
 import copy
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 import hashlib
 import json
 import math
@@ -80,12 +81,16 @@ def evaluate_deal(state, product_id):
         samples = hist["sample_count"]
         if isinstance(samples, bool) or not isinstance(samples, int):
             raise ValueError("invalid sample count")
-        checks["budget"] = price <= money(state.budget)
-        checks["below_average"] = price <= money(avg * AVG_FACTOR)
-        checks["near_low"] = price <= money(low * LOW_FACTOR)
+        # Convert the legacy USD mock data to integer minor units at the edge.
+        # This avoids rounding the 10% threshold upward into a false deal.
+        cents = lambda value: int((Decimal(str(value)) * 100).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+        current_cents, avg_cents, low_cents = cents(price), cents(avg), cents(low)
+        checks["budget"] = current_cents <= cents(state.budget)
+        checks["below_average"] = current_cents * 10 <= avg_cents * 9
+        checks["near_low"] = current_cents * 20 <= low_cents * 21
         checks["stock_and_rating"] = item["in_stock"] is True and rating >= MIN_RATING
         checks["history_depth"] = samples >= MIN_SAMPLES
-        if money(item["list_price"]) > money(avg * INFLATED_LIST_FACTOR):
+        if cents(money(item["list_price"])) * 5 > avg_cents * 6:
             report["red_flags"].append("inflated_list_price")
         report["genuine"] = all(checks.values())
     except (KeyError, ValueError, TypeError, OverflowError) as exc:

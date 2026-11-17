@@ -75,3 +75,36 @@ python live_price.py --url "https://www.amazon.in/YOUR-PRODUCT-PAGE" --budget 30
 Supported retailer domains currently include amazon.in, amazon.com, flipkart.com, croma.com, reliancedigital.in, myntra.com, bestbuy.com, and walmart.com. These are *permitted input domains*, not guaranteed working integrations: stores may require JavaScript, block bots, redirect, or omit structured price data. Follow each retailer's terms and access restrictions. No CAPTCHA bypass is implemented. The tool never guesses a missing price, stock, seller rating, or history. **Within budget is not proof of a genuine discount.** Currency mismatches are not compared. The tool does not track prices over time yet.
 
 This command uses live HTTP requests; `python price_agent.py` continues to run the original mock-data AI workflow.
+
+
+## Phase 4: local, read-only price dashboard
+
+The hardened `backend/price_engine/` subsystem is **separate** from the root
+`price_agent.py` mock-data Groq agent. The dashboard presents verified local
+SQLite observations; it does **not** activate automatic Amazon price tracking
+or validate a real retailer's advertised discount. Price arithmetic is kept
+in integer INR paisa for backend records.
+
+In **VS Code PowerShell**, from the repository root:
+
+```powershell
+python -m pip install -r backend/requirements-dashboard.txt
+cd backend
+python -m unittest discover -s tests -v
+python -m price_engine.demo --db price_engine.sqlite3
+python -m price_engine.dashboard --db price_engine.sqlite3 --host 127.0.0.1 --port 8000
+```
+
+Open <http://127.0.0.1:8000>. The demo creates an **offline fixture**
+listing, not a live retailer observation. API endpoints are described in
+[`backend/README.md`](backend/README.md). The dashboard only reads an existing
+SQLite DB; it will not create one or modify append-only price history. A
+scheduler is not configured by default, and no manual price-fetch action is
+exposed. Do not bind the unauthenticated app to a public interface.
+
+For development validation, install `backend/requirements-dev.txt` and run
+`python -m mypy --strict price_engine` from `backend/`. The release audit
+environment could run 34 offline tests but **could not install or run mypy or
+Hypothesis**; type and property-test compliance is not certified. Review
+[`AUDIT.md`](AUDIT.md) for known risks (including DNS pinning, retailer API
+authorization, and cross-process limits) before enabling network ingestion.

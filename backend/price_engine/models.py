@@ -3,6 +3,9 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import StrEnum
 from hashlib import sha256
+from typing import NewType
+
+Paisa = NewType('Paisa', int)
 
 class Status(StrEnum):
     VALID_PRICE = 'VALID_PRICE'
@@ -22,7 +25,7 @@ class Observation:
     observed_at: datetime
     source: str
     source_record_id: str
-    price_paisa: int | None = None
+    price_paisa: Paisa | None = None
     currency: str = 'INR'
     payload_hash: str = ''
     availability: str = 'UNKNOWN'
