@@ -2,15 +2,14 @@ from __future__ import annotations
 import re
 from dataclasses import replace
 from decimal import Decimal, InvalidOperation
-from statistics import median
 from typing import Sequence
-from .models import Observation, Status
+from .models import Observation, Status, Paisa
 
 # Strict INR grouping: 1,49,999.00, 999.00, 149999.00.
 _INR = re.compile(r'^(?:₹\s*|INR\s*)?(?:([1-9]\d{0,2}(?:,\d{2})*,\d{3}|\d+))(?:\.(\d{1,2}))?$', re.I)
 _FORBIDDEN = re.compile(r'\b(?:emi|monthly|month|mo|installment|instalment|coupon|cashback|exchange|up\s+to|starting\s+at|per\s+month)\b|/\s*(?:mo|month)', re.I)
 
-def parse_inr_paisa(raw: str) -> int:
+def parse_inr_paisa(raw: str) -> Paisa:
     if not isinstance(raw, str):
         raise TypeError('Price must be a string')
     value = raw.strip()
@@ -27,10 +26,12 @@ def parse_inr_paisa(raw: str) -> int:
     paisa = amount * 100
     if amount <= 0 or paisa != paisa.to_integral_value() or paisa > 10**12:
         raise ValueError('Invalid price range or precision')
-    return int(paisa)
+    return Paisa(int(paisa))
 
 def validate_observation(obs: Observation, history: Sequence[int]) -> Observation:
     if obs.status == Status.OUT_OF_STOCK:
+        if not obs.identity_verified:
+            return replace(obs, status=Status.QUARANTINED, reason='IDENTITY_UNVERIFIED')
         if obs.price_paisa is not None:
             return replace(obs, status=Status.QUARANTINED, reason='OUT_OF_STOCK_WITH_PRICE')
         return obs
@@ -47,7 +48,12 @@ def validate_observation(obs: Observation, history: Sequence[int]) -> Observatio
         if obs.price_paisa > previous * 2:
             return replace(obs, status=Status.QUARANTINED, reason='INCREASE_OVER_100_PERCENT')
     if len(history) >= 10:
-        med = median(history[-30:])
-        if abs(obs.price_paisa - med) * 100 > med * 40:
+        ordered = sorted(history[-30:])
+        n = len(ordered)
+        if n % 2:
+            median_num, median_den = ordered[n // 2], 1
+        else:
+            median_num, median_den = ordered[n // 2 - 1] + ordered[n // 2], 2
+        if abs(obs.price_paisa * median_den - median_num) * 100 > median_num * 40:
             return replace(obs, status=Status.QUARANTINED, reason='MEDIAN_VARIANCE_OVER_40_PERCENT')
     return obs

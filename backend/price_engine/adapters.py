@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from contextvars import ContextVar
 from .models import Observation
 
 @dataclass(frozen=True, slots=True)
@@ -11,6 +12,9 @@ class Listing:
     canonical_url: str
     product_id: str | None
     seller_id: str = ''
+
+# One unique ID per logical poll; ContextVar keeps concurrent polls isolated.
+current_poll_id: ContextVar[str | None] = ContextVar('price_agent_poll_id', default=None)
 
 class BaseRetailerClient(ABC):
     @abstractmethod
