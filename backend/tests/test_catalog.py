@@ -84,7 +84,7 @@ class RealCatalogTests(unittest.TestCase):
             self.assertNotIn("price_paisa", entries[0])
             self.assertEqual(client.get("/api/catalog/search", params={"q": "Cereals"}).json()["items"], [])
             self.assertEqual(len(client.get("/api/catalog/search", params={"q": "oats"}).json()["items"]), 1)
-            self.assertEqual(len(client.get("/api/catalog/search", params={"q": "' OR *"}).json()["items"]), 0)
+            self.assertEqual(len(client.get("/api/catalog/search", params={"q": 'missingproducttoken" OR "Oats'}).json()["items"]), 0)
             first_page = client.get("/api/catalog/search", params={"limit": 1})
             self.assertEqual(first_page.status_code, 200)
             self.assertTrue(first_page.json()["has_more"])
