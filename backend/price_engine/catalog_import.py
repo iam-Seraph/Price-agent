@@ -19,6 +19,13 @@ from typing import TextIO
 SOURCE = "open_food_facts"
 SCHEMA = Path(__file__).resolve().parents[1] / "migrations" / "002_catalog.sql"
 UPC = re.compile(r"[0-9]{8,14}\Z")
+# Exclude age-restricted/intoxicating categories from the public-facing catalog.
+_RESTRICTED = re.compile(
+    r"\b(?:alcoholic[-\s]beverages?|beers?|wines?|spirits?|liquors?|liqueurs?|" 
+    r"ciders?|champagnes?|whisk(?:e)?y|vodka|tequila|tobacco|nicotine)\b",
+    re.IGNORECASE,
+)
+
 WRITE_SQL = """
 INSERT INTO product_catalog
 (source,source_product_id,name,brand,category,quantity,countries,
@@ -51,6 +58,10 @@ def normalize(row: dict[str, str | None], imported_at: str) -> tuple[object, ...
     code = clean(row.get("code") or row.get("barcode"), 32)
     name = clean(row.get("product_name"), 300)
     if not UPC.fullmatch(code) or not name:
+        return None
+    classification = " ".join(clean(row.get(key), 1200) for key in
+                              ("categories", "categories_tags", "main_category", "product_name"))
+    if _RESTRICTED.search(classification):
         return None
     modified = clean(row.get("last_modified_t"), 24)
     modified_t = int(modified) if modified.isdigit() else None
