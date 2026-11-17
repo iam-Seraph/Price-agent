@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "retailers": {
+    "amazon_in": {
+      "domains": ["amazon.in"],
+      "api": {"enabled": false, "endpoint": null, "credential_env": "AMAZON_API_KEY"},
+      "html": {"enabled": false, "policy_approved": false, "title_selectors": [], "price_selectors": [], "availability_selectors": [], "jsonld": true},
+      "requests_per_minute": 6,
+      "max_concurrency": 1
+    },
+    "flipkart": {
+      "domains": ["flipkart.com"],
+      "api": {"enabled": false, "endpoint": null, "credential_env": "FLIPKART_API_KEY"},
+      "html": {"enabled": false, "policy_approved": false, "title_selectors": [], "price_selectors": [], "availability_selectors": [], "jsonld": true},
+      "requests_per_minute": 6,
+      "max_concurrency": 1
+    }
+  }
+}
