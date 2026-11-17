@@ -14,13 +14,14 @@ From the root of your VS Code `Price-agent` checkout, in PowerShell:
 
 ```powershell
 python -m pip install -r backend/requirements-dashboard.txt
+python -m pip install -r backend/requirements-dev.txt
 cd backend
 python -m unittest discover -s tests -v
 python -m pytest -q tests
 ```
 
 For type-checking and property-test development, install the optional developer
-requirements and run `python -m mypy --strict price_engine`. The audit
+requirements and run `python -m mypy --strict price_engine`. The original audit
 container did not have mypy or Hypothesis installed, and installation was
 blocked by unavailable DNS: **strict mypy and Hypothesis remain unverified**.
 Do not treat the pytest/unittest pass as a substitute for strict typing.
@@ -112,3 +113,13 @@ with SQLite rather than its USD mock data, authentication if externally
 exposed, verified strict mypy and Hypothesis checks, and real-world load
 measurements are still required. Do **not** switch on retailer extraction
 based solely on fixture tests.
+
+## Release and documentation status
+
+The Phase 2 hardening and Phase 4 dashboard code was merged to GitHub `main`
+via [PR #1](https://github.com/iam-Seraph/Price-agent/pull/1) on 2026-11-18
+(merge commit `89f6b0fa343502797ba697252afb021497ac0b66`).
+See the [root README](../README.md) for the consolidated project quick start,
+and [AUDIT.md](../AUDIT.md) for preserved findings, historical test evidence,
+actual published commit hashes, and outstanding limitations. Those historical
+offline test results are not fresh GitHub CI results.

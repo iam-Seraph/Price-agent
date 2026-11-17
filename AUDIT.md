@@ -1,11 +1,16 @@
 # Price Agent — Phase 0–4 hardening and dashboard audit
 
-**Historical outcome (2026-11-17):** Phase 2 fixes and Phase 4 read-only dashboard
-scaffold have been committed to the disconnected local `audit/hardening` branch.
-The Phase 0–1 evidence below is preserved as a **historical baseline**; it
-predates the implementation and should not be confused with current state.
-No external retailer network calls or Git pushes occurred. No `.env` file or
-secret was read, modified or packaged. No DB schema was changed.
+**Current GitHub release state (verified 2026-11-18):** Phase 2 hardening and
+the Phase 4 read-only dashboard were merged from GitHub `audit/hardening`
+into `main` through [PR #1](https://github.com/iam-Seraph/Price-agent/pull/1),
+merge commit `89f6b0fa343502797ba697252afb021497ac0b66`. This document
+preserves the original Phase 0–4 evidence as a **historical audit**. Mentions
+of an unpushed or disconnected branch below describe the **earlier audit
+environment at that time**, not the current GitHub release. The merged branch
+contained five commits affecting 28 files. No source database migration was
+changed. External retailer behavior and strict type/property tests remain
+unverified; the application is **not production-ready**. For commands and
+architecture, start with [README.md](README.md) and [backend/README.md](backend/README.md).
 
 ## Scope and provenance
 
@@ -250,3 +255,62 @@ release candidate. The release is to be published on `audit/hardening` only;
 `main` is not to be changed. The historical commit hashes above refer to a
 **disconnected local snapshot** and must not be mistaken for the new GitHub
 branch commit IDs.
+
+---
+
+## GitHub publication and merged release — 2026-11-18
+
+This section supersedes **only the publication status** in the historical
+sections above. The underlying findings, baseline results, original local
+commit hashes, unresolved P0/P1/P2 notes, and test limitations remain preserved.
+
+| Milestone | Verified GitHub state |
+|---|---|
+| Initial reviewed `main` | `a91e92859ce87bd10290f0f7612d31b3d231a353` |
+| Published hardening branch | `audit/hardening` at `4e7de97dc2fa02baede315b7cd4c583b66ef1ba7` |
+| Pull request | [#1 — Merge hardening and Phase 4 dashboard](https://github.com/iam-Seraph/Price-agent/pull/1) |
+| Merged `main` | `89f6b0fa343502797ba697252afb021497ac0b66` |
+| Git comparison | Five feature commits and 28 changed files; no force-push |
+| Post-merge comparison | `main` has the merge commit and no file differences from the hardening branch |
+
+### Actual published commit IDs (not historical audit-local IDs)
+
+| GitHub commit | Conventional message |
+|---|---|
+| `d5015840daaa74ea292604d101e6da3a3bfa53e5` | `fix(storage): preserve append-only history and cancellation-safe SQLite access` |
+| `48e99756125d8dfe7a14b3109af464f0b95a95aa` | `fix(ingestion): classify failures and enforce exact money and concurrency rules` |
+| `4b57c0b85e16350b78e85595da0b82074c4f3d26` | `feat(scheduler): add bounded polling and localhost benchmark` |
+| `f17e43caf1b362f77dc2757114b3832a4686ef01` | `feat(dashboard): add read-only SQLite API and responsive price history UI` |
+| `4e7de97dc2fa02baede315b7cd4c583b66ef1ba7` | `docs(audit): publish hardening evidence and dashboard runbook` |
+
+The earlier Phase 2 table maps findings to **disconnected local audit commits**,
+not these GitHub SHA values. The GitHub commits group the reviewed changes by
+storage, ingestion, scheduler, dashboard, and documentation. No claim is made
+that each local finding has a one-to-one public commit.
+
+### Consolidated verification and open requirements
+
+- **Previously executed offline tests:** 34 unittest tests and 34 pytest tests
+  passed in the reconstructed hardening checkout; compilation and whitespace
+  checks also passed. These tests were **not rerun during GitHub PR merge**.
+- **Not verified:** `mypy --strict` and Hypothesis properties, real retailer
+  integrations and terms/access authorization, DNS-pinned SSRF protection,
+  cross-process coordination, and sustained non-regression load testing.
+- **Unchanged DB contract:** `backend/migrations/001_initial.sql` and its
+  append-only price-history update/delete triggers were left untouched.
+- **Dashboard contract:** The FastAPI/Jinja2 app reads an existing SQLite DB
+  with read-only connections. It has no authenticated public endpoint,
+  automatic retailer polling configuration, or manual ingestion action.
+- **Agent separation:** Root `price_agent.py` still uses mock USD price
+  history; the backend's genuine-deal criteria use integer INR paisa.
+- **Security:** The published diff did not contain `.env` or credential files;
+  this is not equivalent to an exhaustive scan of all Git history.
+- **Outstanding:** Original findings F13 (root tools not integrated),
+  F19 (DNS pinning), F21 (strict typing verification), cross-process rate
+  coordination, attempt logging and versioned migrations remain open.
+
+**Documentation structure:** The [root README](README.md) is now the unified
+quick-start and current project summary; [backend/README.md](backend/README.md)
+is the implementation/runbook detail; this `AUDIT.md` retains the complete
+historical finding matrix, test evidence, published commit history, and
+remaining security/reliability limitations.
