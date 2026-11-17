@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Read-only catalog of actual Open Food Facts product records">
+  <title>Product Catalog — Price Signal</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+  <script src="/static/catalog.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">P<span>.</span></span><span>PRICE<span class="brand-light">SIGNAL</span><small>PRODUCT INTELLIGENCE</small></span></div>
+      <div class="nav-head">WORKSPACE</div>
+      <nav aria-label="Primary navigation">
+        <a href="/">▦ <span>Overview</span></a>
+        <a href="/catalog" class="nav-active">▤ <span>Real product catalog</span></a>
+      </nav>
+      <div class="sidebar-footer"><span class="pulse-dot"></span>Local read-only workspace<small>Open Food Facts · ODbL</small></div>
+    </aside>
+    <main>
+      <header class="topbar"><div class="eyebrow">INTELLIGENCE / CATALOG</div><div class="topbar-right"><span id="synced" aria-live="polite">Connecting…</span><span class="avatar">PA</span></div></header>
+      <div class="content">
+        <div class="heading">
+          <div><div class="eyebrow accent">PHASE 5 · OPEN DATA</div><h1>Explore real <em>products.</em></h1><p>Imported product identities, not retailer listings or live prices.</p></div>
+        </div>
+        <section class="metrics" aria-label="Catalog statistics">
+          <article class="metric"><span>CATALOG PRODUCTS</span><strong id="total">—</strong><small>Verified database row count</small></article>
+          <article class="metric"><span>TARGET</span><strong>1M</strong><small>Real records (not preloaded)</small></article>
+          <article class="metric"><span>DATA SOURCE</span><strong class="metric-label">OFF</strong><small>Open Food Facts contributors</small></article>
+          <article class="metric"><span>RETAILER PRICES</span><strong class="metric-label">NONE</strong><small>Not included in this catalog</small></article>
+        </section>
+        <section class="panel" aria-labelledby="catalog-heading">
+          <div class="panel-heading">
+            <div><h2 id="catalog-heading">Search the product catalog</h2><p>Indexed search across product name, brand and category. Results come from SQLite.</p></div>
+            <div class="panel-tools"><input id="catalog-query" type="search" placeholder="Product, brand or category" aria-label="Search product catalog"></div>
+          </div>
+          <div class="table-scroll">
+            <table><thead><tr><th>PRODUCT</th><th>BRAND</th><th>CATEGORY</th><th>SIZE</th><th>ORIGINAL RECORD</th></tr></thead>
+              <tbody id="catalog-results"><tr><td colspan="5" class="empty">Loading catalog…</td></tr></tbody>
+            </table>
+          </div>
+          <div class="panel-foot catalog-pager">
+            <span id="catalog-count" aria-live="polite">—</span>
+            <div><button type="button" id="previous" class="refresh" disabled>Previous</button> <button type="button" id="next" class="refresh" disabled>Next</button></div>
+          </div>
+        </section>
+        <p class="catalog-credit">Data: <a href="https://world.openfoodfacts.org" rel="noopener noreferrer" target="_blank">Open Food Facts contributors</a> (<a href="https://opendatacommons.org/licenses/odbl/1-0/" rel="noopener noreferrer" target="_blank">ODbL</a>). Entries may be incomplete. No retailer price or stock claim is implied.</p>
+        <footer>PRICE SIGNAL <span>·</span> Read-only local catalog <span>·</span> No requests to retailer sites</footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
