@@ -211,6 +211,8 @@ def create_app(db_path: str | Path) -> FastAPI:
     def health() -> dict[str, object]:
         return store.health()
 
+    from .catalog_api import register_catalog_routes
+    register_catalog_routes(app, db_path)
     return app
 
 
