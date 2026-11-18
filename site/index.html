@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#09111f" />
+  <meta name="description" content="Price Agent is an open-source Python experiment in AI deal analysis, validated price history, and searchable real-product data. Explore the code, architecture, and local setup." />
+  <meta property="og:title" content="Price Agent — Build the signal. Verify the price." />
+  <meta property="og:description" content="An open-source Python project combining agent experiments, SQLite price history, and an Open Food Facts catalog." />
+  <meta property="og:type" content="website" />
+  <title>Price Agent — Build the signal. Verify the price.</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="stylesheet" href="./style.css" />
+  <script src="./script.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="site-glow glow-a" aria-hidden="true"></div><div class="site-glow glow-b" aria-hidden="true"></div>
+  <header class="header" id="top">
+    <nav class="nav wrap" aria-label="Main navigation">
+      <a class="logo" href="#top" aria-label="Price Agent home"><span class="logo-square">P<span>·</span></span><span class="logo-text">PRICE<span>AGENT</span><small>OPEN SOURCE / PYTHON</small></span></a>
+      <button class="menu-button" id="menu-button" aria-controls="nav-links" aria-expanded="false" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+      <div class="nav-links" id="nav-links">
+        <a href="#features">Features</a><a href="#architecture">Architecture</a><a href="#setup">Get started</a><a href="#questions">FAQ</a>
+        <a class="nav-github" href="https://github.com/iam-Seraph/Price-agent" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+      </div>
+    </nav>
+  </header>
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="pulse" aria-hidden="true"></span> EXPERIMENTAL · OPEN SOURCE · PYTHON</div>
+        <h1 id="hero-title">Build the signal.<br/><span>Verify the price.</span></h1>
+        <p class="hero-desc">Meet <strong>Price Agent</strong>—a hands-on engineering project exploring AI-powered deal analysis, validated SQLite price history, and indexed real-product discovery.</p>
+        <div class="hero-actions"><a class="btn btn-primary" href="https://github.com/iam-Seraph/Price-agent" target="_blank" rel="noopener noreferrer">Explore on GitHub <span aria-hidden="true">↗</span></a><a class="btn btn-secondary" href="#setup">Run it locally <span aria-hidden="true">↓</span></a></div>
+        <div class="hero-micro"><span><i aria-hidden="true"></i> 37 backend tests passed in CI</span><span><i aria-hidden="true"></i> Python 3.11+ / SQLite</span></div>
+      </div>
+      <div class="hero-art" aria-label="Conceptual visualization of the separate Price Agent modules">
+        <div class="mock-window">
+          <div class="mock-titlebar"><div class="window-dots"><b></b><b></b><b></b></div><span>price-agent / architecture</span><span class="mock-live">LOCAL FIRST</span></div>
+          <div class="mock-main">
+            <div class="mock-head"><span class="mock-kicker">ENGINEERING CONSOLE</span><strong>Signals, not guesses.</strong><p>Independent workflows. Explicit data boundaries.</p></div>
+            <div class="mock-metrics">
+              <div><span>BACKEND TESTS</span><strong>37<span>/37</span></strong><small>Latest verified PR CI</small></div>
+              <div><span>CATALOG GOAL</span><strong>1M<span> rows</span></strong><small>Target, not imported count</small></div>
+            </div>
+            <div class="mock-data">
+              <div class="mock-row"><span class="mock-icon one">01</span><div><strong>ReAct agent</strong><small>Mock USD examples</small></div><span class="chip">EXPERIMENT</span></div>
+              <div class="mock-row"><span class="mock-icon two">02</span><div><strong>SQLite price engine</strong><small>Validated INR observations</small></div><span class="chip">LOCAL</span></div>
+              <div class="mock-row"><span class="mock-icon three">03</span><div><strong>Open Food Facts catalog</strong><small>Product identity, no prices</small></div><span class="chip">IMPORT</span></div>
+            </div>
+            <div class="mock-footer"><span class="mini-dot"></span><span>Components are not yet integrated into one live system</span></div>
+          </div>
+        </div>
+        <div class="float-label">VERIFICATION <span>BEFORE AUTOMATION</span></div>
+      </div>
+    </section>
+    <section class="stat-strip" aria-label="Project at a glance"><div class="wrap strip-grid"><div><b>04</b><span>distinct workflows</span></div><div><b>37/37</b><span>backend tests passed in CI</span></div><div><b>1M</b><span>accepted-row import target</span></div><div><b>0</b><span>verified live retailer feeds</span></div></div></section>
+    <section class="section wrap" id="features"><div class="section-head"><div><div class="section-label">01 / WHAT'S INSIDE</div><h2>One project.<br/><span>Four experiments.</span></h2></div><p>Price Agent separates the things that work today from the integrations still to build. Every feature has a clear data source and boundary.</p></div>
+      <div class="feature-grid">
+        <article class="feature-card featured"><div class="card-number">01 / AI REASONING</div><div class="feature-symbol">✳</div><h3>ReAct deal agent</h3><p>Uses tools to analyze fictional product prices and historical statistics. An LLM can propose a decision; Python-side rules help verify it.</p><div class="feature-foot"><span>Mock USD catalog</span><span class="card-arrow">↗</span></div></article>
+        <article class="feature-card"><div class="card-number">02 / VALIDATED STORAGE</div><div class="feature-symbol">⌑</div><h3>Price history engine</h3><p>Typed observations, integer INR paisa, append-only SQLite history, anomaly checks and an opt-in scheduler.</p><div class="feature-foot"><span>Local database</span><span class="card-arrow">↗</span></div></article>
+        <article class="feature-card"><div class="card-number">03 / READ-ONLY UI</div><div class="feature-symbol">▤</div><h3>Monitoring dashboard</h3><p>A responsive FastAPI interface for accepted observations, freshness, price-history charts and backend status.</p><div class="feature-foot"><span>Localhost only</span><span class="card-arrow">↗</span></div></article>
+        <article class="feature-card"><div class="card-number">04 / REAL OPEN DATA</div><div class="feature-symbol">◎</div><h3>Product discovery</h3><p>Stream Open Food Facts grocery metadata into SQLite, with indexed search and pagination. Product data does not imply a current offer.</p><div class="feature-foot"><span>Manual bulk import</span><span class="card-arrow">↗</span></div></article>
+      </div>
+    </section>
+    <section class="section architecture" id="architecture"><div class="wrap"><div class="section-head"><div><div class="section-label">02 / SYSTEM DESIGN</div><h2>Architecture built<br/><span>around trust.</span></h2></div><p>The project keeps a hard boundary between simulated AI decisions, open catalog records, and actual validated price observations.</p></div>
+      <div class="architecture-grid">
+        <div class="flow-card"><div class="flow-head"><span class="flow-index">A</span><strong>AI experiment</strong><span class="flow-pill">SEPARATE</span></div><div class="flow-step">Groq/OpenAI model</div><div class="flow-line" aria-hidden="true">↓</div><div class="flow-step">Mock product / JSON history</div><div class="flow-line" aria-hidden="true">↓</div><div class="flow-end">Python-verified example alert</div></div>
+        <div class="flow-card"><div class="flow-head"><span class="flow-index">B</span><strong>Price history</strong><span class="flow-pill">LOCAL</span></div><div class="flow-step">Offline fixture / approved adapter</div><div class="flow-line" aria-hidden="true">↓</div><div class="flow-step">Validation → SQLite INR</div><div class="flow-line" aria-hidden="true">↓</div><div class="flow-end">Read-only monitoring dashboard</div></div>
+        <div class="flow-card"><div class="flow-head"><span class="flow-index">C</span><strong>Real product catalog</strong><span class="flow-pill">BULK IMPORT</span></div><div class="flow-step">Open Food Facts export</div><div class="flow-line" aria-hidden="true">↓</div><div class="flow-step">Streaming import → SQLite FTS5</div><div class="flow-line" aria-hidden="true">↓</div><div class="flow-end">Read-only catalog search</div></div>
+      </div><div class="boundary-note"><span class="boundary-icon">!</span><p><strong>Important boundary:</strong> These flows are independent today. Neither the catalog nor the agent supplies verified live retailer prices to the dashboard.</p></div>
+      </div></section>
+    <section class="section wrap" id="setup"><div class="section-head"><div><div class="section-label">03 / QUICK START</div><h2>Get running<br/><span>in minutes.</span></h2></div><p>Clone the project, install its dependencies, and launch the local dashboard. Sample data is offline and explicitly synthetic.</p></div>
+      <div class="setup-wrap"><div class="setup-steps"><div class="setup-step"><span>01</span><div><h3>Clone and install</h3><p>Python 3.11 or newer is recommended. Install the dashboard dependencies from the project root.</p></div></div><div class="setup-step"><span>02</span><div><h3>Seed once, then launch</h3><p>Run the demo only for a new database filename. If already seeded, skip that command to avoid the known duplicate-ID conflict.</p></div></div><div class="setup-step"><span>03</span><div><h3>Explore locally</h3><p>Open the monitoring overview or catalog at <code>127.0.0.1:8000</code>. The catalog needs a separate bulk import.</p></div></div></div>
+      <div class="terminal"><div class="terminal-header"><div class="window-dots"><b></b><b></b><b></b></div><span>PowerShell · Price-agent</span><button class="copy-button" id="copy-command" type="button" aria-label="Copy installation commands">Copy commands</button></div><div class="terminal-tabs" role="tablist" aria-label="Setup commands"><button class="terminal-tab active" id="tab-dashboard" role="tab" aria-selected="true" aria-controls="code-pane" data-tab="dashboard">Dashboard</button><button class="terminal-tab" id="tab-catalog" role="tab" aria-selected="false" aria-controls="code-pane" data-tab="catalog">Catalog import</button><button class="terminal-tab" id="tab-agent" role="tab" aria-selected="false" aria-controls="code-pane" data-tab="agent">AI agent</button></div><pre id="code-pane" role="tabpanel" aria-labelledby="tab-dashboard"><code id="terminal-code"></code></pre><div class="terminal-note" id="terminal-note" aria-live="polite"></div></div></div>
+      <div class="setup-links"><a href="https://github.com/iam-Seraph/Price-agent/blob/main/README.md" target="_blank" rel="noopener noreferrer">Full setup guide ↗</a><a href="https://github.com/iam-Seraph/Price-agent/blob/main/PHASE5.md" target="_blank" rel="noopener noreferrer">Phase 5 import guide ↗</a><a href="https://github.com/iam-Seraph/Price-agent/blob/main/AUDIT.md" target="_blank" rel="noopener noreferrer">Technical audit ↗</a></div>
+    </section>
+    <section class="section truth-section"><div class="wrap truth-grid"><div><div class="section-label">04 / REALITY CHECK</div><h2>Open source.<br/><span>No inflated claims.</span></h2><p>This site is an overview of the repository, not a hosted instance of the agent or a retailer-price service.</p><a class="inline-link" href="https://github.com/iam-Seraph/Price-agent/blob/main/AUDIT.md" target="_blank" rel="noopener noreferrer">Read known limitations ↗</a></div><div class="truth-list"><div><span class="truth-icon good">✓</span><div><strong>Verified</strong><p>37 backend tests passed in GitHub Actions for Phase 5 and documentation updates.</p></div></div><div><span class="truth-icon neutral">→</span><div><strong>1,000,000 is a target</strong><p>Not a verified number of real products imported. The bulk export is downloaded and imported manually.</p></div></div><div><span class="truth-icon neutral">→</span><div><strong>No live retailer tracking yet</strong><p>Retailer connectors are not enabled by default; seller prices and availability are not guaranteed.</p></div></div><div><span class="truth-icon neutral">→</span><div><strong>AI and database remain separate</strong><p>The ReAct model currently evaluates mock USD products, not live catalog or INR backend records.</p></div></div></div></div></section>
+    <section class="section wrap faq" id="questions"><div class="section-head"><div><div class="section-label">05 / COMMON QUESTIONS</div><h2>Before you<br/><span>hit run.</span></h2></div></div><div class="faq-list"><details><summary>Is this a live price-comparison website?<span>+</span></summary><p>No. This is a project overview. The repository contains a standalone best-effort URL checker, a mock-data AI agent and a local SQLite dashboard; they are not yet a unified live shopping product.</p></details><details><summary>Does the catalog already contain a million products?<span>+</span></summary><p>No. The importer targets up to one million accepted source rows. You must download and import the Open Food Facts export yourself, and the unique imported count may be lower. Data mainly covers food and grocery items.</p></details><details><summary>Why is the database separate from the AI agent?<span>+</span></summary><p>The project is evolving in phases. The Groq/OpenAI ReAct agent currently uses a fictional USD catalog, while the SQLite backend stores validated INR observations. Connecting these responsibly is future work.</p></details><details><summary>Why does the demo raise a duplicate observation error?<span>+</span></summary><p>The demo reuses a source record identifier with a new timestamp on later runs. The database refuses the conflicting duplicate to protect append-only history. Run the demo once per new database file, then launch only the dashboard.</p></details></div></section>
+    <section class="cta wrap"><div class="cta-inner"><div class="section-label">THE NEXT BUILD STARTS HERE</div><h2>Inspect the code.<br/><span>Build the next phase.</span></h2><p>Explore Price Agent's source, tests, API, and documented engineering trade-offs.</p><div class="cta-buttons"><a class="btn btn-dark" href="https://github.com/iam-Seraph/Price-agent" target="_blank" rel="noopener noreferrer">Open GitHub repository ↗</a><a class="btn btn-outline-dark" href="https://github.com/iam-Seraph/Price-agent/blob/main/README.md" target="_blank" rel="noopener noreferrer">Read documentation ↗</a></div></div></section>
+  </main>
+  <footer class="footer"><div class="wrap footer-row"><a class="logo footer-logo" href="#top"><span class="logo-square">P<span>·</span></span><span class="logo-text">PRICE<span>AGENT</span></span></a><p>Independent open-source engineering experiment. Not investment or purchasing advice.</p><div><a href="https://github.com/iam-Seraph/Price-agent" target="_blank" rel="noopener noreferrer">GitHub</a><a href="https://world.openfoodfacts.org" target="_blank" rel="noopener noreferrer">Open Food Facts</a><a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">ODbL</a></div></div><div class="wrap footer-bottom"><span>© <span id="year">2026</span> Price Agent project · Static informational site</span><span>Designed for clarity and verification</span></div></footer>
+</body>
+</html>

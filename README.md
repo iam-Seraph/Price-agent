@@ -177,3 +177,20 @@ Price-agent/
 | 2026-11-18 | Phase 5 real catalog importer, FTS5 search, UI, tests and CI | [PR #3](https://github.com/iam-Seraph/Price-agent/pull/3), `a7cd7e1f12dd7a6e688bc8ea54f01d985fdcf142` |
 
 All three are merged into `main`. The Phase 5 release provides **import capability**, not a preloaded million-item dataset or real retailer-price feed.
+
+## Project website and source backup
+
+The responsive, dependency-free project website lives in [`site/`](site/README.md).
+It is a **static documentation/portfolio site**; it does not expose the
+local SQLite dashboard or provide a hosted retailer-price API. Open
+[`site/index.html`](site/index.html) to preview it locally, or run
+`python -m http.server 8080 --directory site` from the repository root
+and visit `http://127.0.0.1:8080`. Hosting with GitHub Pages is optional
+and **not automatically enabled**.
+
+A [source-backup workflow](.github/workflows/source-backup.yml) archives
+the **tracked** GitHub `main` branch into a ZIP and SHA-256 checksum
+when `main` changes. It excludes ignored local databases, API keys,
+downloaded bulk Open Food Facts exports and other untracked files.
+GitHub Actions artifacts have limited retention (14 days here);
+the separate Google Drive archive is the longer-lived offsite copy.

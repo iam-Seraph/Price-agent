@@ -1,0 +1,32 @@
+name: Export GitHub source backup
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tracked source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Create source archive and checksum
+        shell: bash
+        run: |
+          mkdir -p dist
+          git archive --format=zip --output="dist/price-agent-main-$GITHUB_SHA.zip" HEAD
+          (cd dist && sha256sum *.zip > SHA256SUMS.txt)
+          unzip -t "dist/price-agent-main-$GITHUB_SHA.zip" | tail -n 2
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: price-agent-main-source
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
