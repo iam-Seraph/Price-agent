@@ -1,5 +1,7 @@
 # Price Agent — Experimental Deal Analysis and Product Catalog
 
+> **Experimental Phase 1 checkpoint (separate branch):** A new SerpApi-only, SQLite-backed offer pipeline is being built alongside the legacy mock agent. Source-linked quotes remain provider-reported, not independently verified. See [PHASE1_CHECKPOINT.md](PHASE1_CHECKPOINT.md). To run it, use `python real_price_agent.py --query "laptop" --budget 60000 --currency INR --db tracker.sqlite3` after configuring a private `SERPAPI_KEY`. No fictional prices enter the new offer tables.
+
 Python learning project with **four separate workflows**: mock-data ReAct AI, a standalone live URL price checker, a hardened SQLite price-history dashboard, and a searchable catalog of **real food/grocery products** from Open Food Facts.
 
 > **Status (18 November 2026):** Phases 2–5 are merged into `main`. Phase 5 can import up to **1,000,000 accepted Open Food Facts source rows**, but no million-product dataset is bundled or verified imported. **No automatic retailer tracking or AI-to-catalog integration.** Not production-ready. See [PHASE5.md](PHASE5.md) and [AUDIT.md](AUDIT.md).
