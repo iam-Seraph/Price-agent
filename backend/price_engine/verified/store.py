@@ -1,0 +1,95 @@
+"""Atomic source-linked SQLite persistence; legacy data remains untouched."""
+from __future__ import annotations
+
+import sqlite3
+from contextlib import contextmanager
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Iterator
+
+from .types import ProviderOffer
+
+MIGRATION = Path(__file__).resolve().parents[2] / "migrations" / "003_verified_offers.sql"
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z")
+
+
+class VerifiedPriceStore:
+    def __init__(self, path: str | Path, *, initialize: bool = True) -> None:
+        self.path = Path(path).expanduser().resolve()
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        if initialize:
+            with self.connect() as db:
+                db.executescript("BEGIN IMMEDIATE;\n" + MIGRATION.read_text(encoding="utf-8")
+                                 + "\nCOMMIT;")
+
+    @contextmanager
+    def connect(self) -> Iterator[sqlite3.Connection]:
+        db = sqlite3.connect(str(self.path), timeout=15)
+        try:
+            db.row_factory = sqlite3.Row
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("PRAGMA busy_timeout=15000")
+            db.execute("PRAGMA journal_mode=WAL")
+            yield db
+        finally:
+            db.close()
+
+    def persist(self, offer: ProviderOffer) -> bool:
+        """Store one provider event. Exact replays are safe; altered replays fail."""
+        if offer.observed_at.astimezone(timezone.utc) > datetime.now(timezone.utc) + timedelta(minutes=5):
+            raise ValueError("Future-dated provider observation rejected")
+        rating = str(offer.seller_rating) if offer.seller_rating is not None else None
+        fields = (offer.offer_id, offer.observed_utc, offer.price_minor,
+                  offer.stock, rating, offer.evidence_sha256)
+        with self.connect() as db:
+            with db:
+                existing = db.execute(
+                    "SELECT offer_id,observed_at,price_minor,stock,seller_rating,evidence_sha256 "
+                    "FROM verified_offer_observations WHERE event_id=?",
+                    (offer.event_id,)).fetchone()
+                if existing is not None:
+                    if tuple(existing) != fields:
+                        raise ValueError("Event ID replay does not match immutable observation")
+                    return False
+                timestamp = utc_now()
+                db.execute("""
+                    INSERT INTO verified_offers
+                    (offer_id,provider,provider_product_id,merchant,title,product_url,
+                     currency,created_at,last_seen_at)
+                    VALUES(?,?,?,?,?,?,?,?,?)
+                    ON CONFLICT(offer_id) DO UPDATE SET
+                      title=excluded.title,product_url=excluded.product_url,
+                      last_seen_at=excluded.last_seen_at
+                """, (offer.offer_id,offer.provider,offer.source_product_id,offer.merchant,
+                      offer.title,offer.product_url,offer.currency,timestamp,timestamp))
+                db.execute("""
+                    INSERT INTO verified_offer_observations
+                    (event_id,offer_id,observed_at,price_minor,stock,seller_rating,
+                     evidence_sha256,provenance,ingested_at)
+                    VALUES(?,?,?,?,?,?,?,'PROVIDER_REPORTED',?)
+                """, (offer.event_id,*fields,timestamp))
+                return True
+
+    def offer(self, offer_id: str) -> dict[str, object] | None:
+        with self.connect() as db:
+            row = db.execute(
+                "SELECT offer_id,provider,provider_product_id,merchant,title,product_url,"
+                "currency,created_at,last_seen_at FROM verified_offers WHERE offer_id=?",
+                (offer_id,)).fetchone()
+            return dict(row) if row else None
+
+    def list_offers(self, limit: int = 20) -> list[dict[str, object]]:
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("Limit must be between 1 and 100")
+        with self.connect() as db:
+            return [dict(row) for row in db.execute("""
+                SELECT o.offer_id,o.merchant,o.title,o.currency,o.product_url,
+                       MAX(p.observed_at) AS last_observed_at
+                FROM verified_offers o JOIN verified_offer_observations p
+                  ON p.offer_id=o.offer_id
+                GROUP BY o.offer_id
+                ORDER BY last_observed_at DESC LIMIT ?
+            """, (limit,)).fetchall()]
