@@ -119,3 +119,39 @@ class AlertStore:
                           report["price_minor"],report["currency"],stamp,stamp))
                     count += cursor.rowcount
         return count
+
+
+    def claim_deliveries(self, *, now: datetime | None = None,
+                         limit: int = 5) -> list[dict[str, object]]:
+        """Atomically lease a bounded outbox batch for a single sender."""
+        if type(limit) is not int or not 1 <= limit <= 10:
+            raise ValueError("Delivery limit must be 1-10")
+        clock = now or datetime.now(timezone.utc)
+        at = watch_time(clock)
+        lease_until = watch_time(clock + timedelta(minutes=3))
+        with self.watches.prices.connect() as db:
+            with db:
+                db.execute("BEGIN IMMEDIATE")
+                rows = db.execute("""
+                    SELECT q.delivery_id,q.watch_id,q.offer_id,q.channel,
+                           q.price_minor,q.currency,q.attempts
+                    FROM verified_alert_outbox q
+                    JOIN verified_alert_rules r ON r.watch_id=q.watch_id AND r.channel=q.channel
+                    JOIN verified_watch_queries w ON w.watch_id=q.watch_id
+                    WHERE r.enabled=1 AND w.enabled=1 AND q.attempts<5
+                      AND q.next_attempt_at<=?
+                      AND (q.status='QUEUED' OR
+                           (q.status='LEASED' AND q.lease_expires_at<=?))
+                    ORDER BY q.created_at,q.delivery_id LIMIT ?
+                """, (at,at,limit)).fetchall()
+                claimed = []
+                for row in rows:
+                    item = dict(row)
+                    token = uuid4().hex
+                    db.execute("""
+                        UPDATE verified_alert_outbox SET status='LEASED',
+                          lease_owner=?,lease_expires_at=? WHERE delivery_id=?
+                    """, (token,lease_until,item["delivery_id"]))
+                    item["lease_owner"] = token
+                    claimed.append(item)
+                return claimed
