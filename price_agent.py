@@ -1,6 +1,9 @@
-"""Backwards-compatible CLI entry point; implementation lives in src/price_agent.py."""
-from pathlib import Path
-import runpy
+"""Compatible CLI and import alias for the implementation in src/price_agent.py."""
+import importlib
+import sys
 
 if __name__ == "__main__":
-    runpy.run_path(str(Path(__file__).resolve().parent / "src" / "price_agent.py"), run_name="__main__")
+    from src.price_agent import main
+    main()
+else:
+    sys.modules[__name__] = importlib.import_module("src.price_agent")
