@@ -155,3 +155,56 @@ class AlertStore:
                     item["lease_owner"] = token
                     claimed.append(item)
                 return claimed
+
+
+    def complete_delivery(self, record: dict[str, object], *, success: bool,
+                          retryable: bool = True, error_code: str = "",
+                          now: datetime | None = None) -> str:
+        """Write delivery receipt or capped retry state, never raw credentials."""
+        if type(success) is not bool or type(retryable) is not bool:
+            raise ValueError("Delivery result flags must be boolean")
+        if not isinstance(error_code, str) or len(error_code) > 80:
+            raise ValueError("Invalid delivery error code")
+        clock = now or datetime.now(timezone.utc)
+        at = watch_time(clock)
+        with self.watches.prices.connect() as db:
+            with db:
+                db.execute("BEGIN IMMEDIATE")
+                found = db.execute("""
+                    SELECT attempts,lease_owner,status FROM verified_alert_outbox
+                    WHERE delivery_id=?
+                """, (record["delivery_id"],)).fetchone()
+                if (found is None or found["status"] != "LEASED"
+                        or not record.get("lease_owner")
+                        or found["lease_owner"] != record["lease_owner"]):
+                    raise ValueError("Delivery lease is not owned by this worker")
+                attempts = int(found["attempts"]) + 1
+                if success:
+                    status = "DELIVERED"
+                    next_attempt = at
+                elif retryable and attempts < 5:
+                    status = "QUEUED"
+                    next_attempt = watch_time(clock + timedelta(
+                        seconds=min(3600, 60 * 2**(attempts - 1))))
+                else:
+                    status = "FAILED"
+                    next_attempt = at
+                db.execute("""
+                    UPDATE verified_alert_outbox SET status=?,attempts=?,
+                        next_attempt_at=?,lease_owner=NULL,lease_expires_at=NULL,
+                        delivered_at=?,last_error=?
+                    WHERE delivery_id=?
+                """, (status,attempts,next_attempt,at if success else None,
+                      "" if success else error_code,record["delivery_id"]))
+                return status
+
+    def list_deliveries(self, *, limit: int = 100) -> list[dict[str, object]]:
+        if type(limit) is not int or not 1 <= limit <= 200:
+            raise ValueError("Delivery list limit must be 1-200")
+        with self.watches.prices.connect() as db:
+            return [dict(row) for row in db.execute("""
+                SELECT delivery_id,watch_id,offer_id,channel,observed_day,
+                       price_minor,currency,created_at,status,attempts,
+                       next_attempt_at,delivered_at,last_error
+                FROM verified_alert_outbox ORDER BY created_at DESC LIMIT ?
+            """, (limit,)).fetchall()]
