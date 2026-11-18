@@ -1,0 +1,72 @@
+"""Persistent, opt-in watchlist records with bounded local schedules."""
+from __future__ import annotations
+
+import re
+from datetime import datetime, timezone
+from pathlib import Path
+from uuid import uuid4
+
+from .money import minor_units, validate_currency
+from .store import VerifiedPriceStore, utc_now
+
+MIGRATION = Path(__file__).resolve().parents[2] / "migrations" / "004_watch_queries.sql"
+WATCH_ID = re.compile(r"[0-9a-f]{32}\Z")
+
+
+def watch_time(moment: datetime) -> str:
+    if moment.tzinfo is None or moment.utcoffset() is None:
+        raise ValueError("Watch clock must be timezone-aware")
+    return moment.astimezone(timezone.utc).isoformat(
+        timespec="microseconds").replace("+00:00", "Z")
+
+
+class WatchStore:
+    """Lightweight SQLite management; credentials are never persisted."""
+    def __init__(self, path: str | Path) -> None:
+        self.prices = VerifiedPriceStore(path)
+        with self.prices.connect() as db:
+            db.executescript("BEGIN IMMEDIATE;\n" + MIGRATION.read_text(encoding="utf-8")
+                             + "\nCOMMIT;")
+
+    def add_watch(self, query: str, budget: str, currency: str = "INR",
+                  interval_minutes: int = 60,
+                  *, now: datetime | None = None) -> str:
+        if (not isinstance(query, str) or not 2 <= len(query.strip()) <= 120
+                or any(ord(char) < 32 for char in query)):
+            raise ValueError("Watch query must contain 2-120 printable characters")
+        if type(interval_minutes) is not int or not 15 <= interval_minutes <= 1440:
+            raise ValueError("Watch interval must be between 15 and 1440 minutes")
+        currency = validate_currency(currency)
+        minor = minor_units(budget, currency)
+        watch_id = uuid4().hex
+        created = watch_time(now) if now is not None else utc_now()
+        with self.prices.connect() as db:
+            with db:
+                db.execute("""
+                    INSERT INTO verified_watch_queries
+                    (watch_id,query_text,currency,budget_minor,interval_seconds,
+                     enabled,created_at,next_due_at)
+                    VALUES(?,?,?,?,?,1,?,?)
+                """, (watch_id,query.strip(),currency,minor,
+                      interval_minutes*60,created,created))
+        return watch_id
+
+    def list_watches(self, limit: int = 100) -> list[dict[str, object]]:
+        if type(limit) is not int or not 1 <= limit <= 200:
+            raise ValueError("Watch list limit must be 1-200")
+        with self.prices.connect() as db:
+            return [dict(row) for row in db.execute("""
+                SELECT watch_id,query_text,currency,budget_minor,interval_seconds,
+                       enabled,created_at,next_due_at,last_checked_at,last_status
+                FROM verified_watch_queries
+                ORDER BY created_at DESC LIMIT ?
+            """, (limit,)).fetchall()]
+
+    def disable_watch(self, watch_id: str) -> bool:
+        if not isinstance(watch_id, str) or not WATCH_ID.fullmatch(watch_id):
+            raise ValueError("Invalid watch ID")
+        with self.prices.connect() as db:
+            with db:
+                return db.execute(
+                    "UPDATE verified_watch_queries SET enabled=0 WHERE watch_id=? AND enabled=1",
+                    (watch_id,)).rowcount == 1
