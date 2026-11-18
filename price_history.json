@@ -1,6 +1,0 @@
-{
-  "headphones-a": {"avg_30d": 329.99, "lowest_30d": 244.99, "sample_count": 30},
-  "monitor-b": {"avg_30d": 118.0, "lowest_30d": 109.99, "sample_count": 30},
-  "vacuum-c1": {"avg_30d": 450.0, "lowest_30d": 339.99, "sample_count": 30},
-  "band-c2": {"avg_30d": 99.99, "lowest_30d": 77.99, "sample_count": 30}
-}
