@@ -31,14 +31,22 @@ Do not treat the pytest/unittest pass as a substitute for strict typing.
 Still inside `backend/`:
 
 ```powershell
-python -m price_engine.demo --db price_engine.sqlite3
-python -m price_engine.dashboard --db price_engine.sqlite3 --host 127.0.0.1 --port 8000
+# Only if you have NOT already initialized this demo filename:
+python -m price_engine.demo --db demo_fresh.sqlite3
+python -m price_engine.dashboard --db demo_fresh.sqlite3 --host 127.0.0.1 --port 8000
 ```
 
-Open <http://127.0.0.1:8000>. The demo uses an **offline synthetic HTML
-fixture**, not a real retailer quote. The second run of the demo against the
-same database reports `inserted: False` because the fixture uses a stable
-record ID.
+Open <http://127.0.0.1:8000> for price history and
+<http://127.0.0.1:8000/catalog> for the Phase 5 catalog. The demo uses
+an **offline synthetic HTML fixture**, not a live retailer quote. Run
+the demo command **only once per new database filename**. Re-running it
+against an existing database can raise
+`ValueError: Conflicting duplicate observation ID or source record`:
+the fixture reuses a source record ID but supplies a new observation
+timestamp. This is deliberate append-only storage protection. Preserve
+your database; skip the demo step on subsequent runs, or select a new
+database filename. The catalog page displays no imported products until
+you explicitly run the Open Food Facts importer.
 
 ### Endpoints
 
@@ -48,6 +56,9 @@ record ID.
 | `GET /api/listings?limit=50&offset=0` | Active listings with latest verified status, integer paisa, formatted price, stale indicator, and up to 60 accepted 30-day trend samples |
 | `GET /api/listings/{listing_id}/history?days=30` | Accepted, in-stock observations in UTC, exact paisa fields, count, total, rounded display average, low, and at most 10,000 chart points |
 | `GET /api/health` | Read-only DB and configured-scheduler status (`NOT_CONFIGURED` by default) |
+| `GET /catalog` | Phase 5 product catalog UI with Open Food Facts attribution |
+| `GET /api/catalog/stats` | Actual imported product count and last import timestamp |
+| `GET /api/catalog/search?q=oats&limit=25&offset=0` | FTS5 indexed lookup by name/brand/category; at most 100 results per page |
 
 The dashboard uses separate `file:...?...mode=ro` SQLite connections,
 `PRAGMA query_only=ON`, short read transactions, parameterized SQL and
