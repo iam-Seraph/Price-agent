@@ -128,8 +128,8 @@ based solely on fixture tests.
 ## Phase 5 — imported open-data catalog
 
 Phase 5 is **merged into `main`** through [PR #3](https://github.com/iam-Seraph/Price-agent/pull/3) (merge `a7cd7e1f12dd7a6e688bc8ea54f01d985fdcf142`).
-This is a separate **Open Food Facts** product-identity catalog, not a
-price-source adapter. New components:
+This is a separate **Open Food Facts** food/grocery product-identity
+catalog, not a general electronics catalog or a price-source adapter. New components:
 
 - `migrations/002_catalog.sql`: independent `product_catalog` and
   `catalog_import_runs` tables, FTS5 index with insert/update/delete
