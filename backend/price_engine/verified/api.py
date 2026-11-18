@@ -124,6 +124,13 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
         return {"rule_id": rule_id, "enabled": body.enabled,
                 "delivery_started": False}
 
+    @app.get("/api/verified/alerts")
+    def list_verified_alerts(limit: int = Query(50, ge=1, le=100)):
+        """Read source-qualified queue state without exposing contact destinations."""
+        return {"rules": alerts.list_rules(limit=limit),
+                "deliveries": alerts.list_deliveries(limit=limit),
+                "contacts_stored_in_database": False}
+
     @app.get("/api/verified/watch-runs")
     def verified_watch_audit(limit: int = Query(30, ge=1, le=100)):
         return {"runs": watches.recent_runs(limit=limit)}
