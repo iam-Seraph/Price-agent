@@ -11,7 +11,7 @@ from typing import Literal
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
@@ -50,9 +50,14 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
     def workspace_page(request: Request):
         return _TEMPLATES.TemplateResponse(request, "workspace.html", {})
 
-    @app.get("/intelligence", response_class=HTMLResponse)
-    def intelligence_page(request: Request):
-        """Optional virtual catalog studio, separate from real retailer history."""
+    @app.get("/intelligence")
+    def intelligence_page():
+        """Primary Intelligence view now uses actual persisted provider observations."""
+        return RedirectResponse(url="/verified", status_code=307)
+
+    @app.get("/simulation", response_class=HTMLResponse)
+    def legacy_simulation_page(request: Request):
+        """Explicitly labeled historical fictional UI, never used for real decisions."""
         return _TEMPLATES.TemplateResponse(request, "intelligence.html", {})
 
     @app.get("/api/workspace/status")
