@@ -49,7 +49,7 @@ def parse_shopping_results(payload: dict[str, Any], observed_at: datetime,
             safe_evidence_url(link)
             minor, currency = provider_price(item["price"], item.get("extracted_price"))
             source_id = item.get("product_id")
-            if not isinstance(source_id, (str, int)) or not str(source_id).strip():
+            if isinstance(source_id, bool) or not isinstance(source_id, (str, int)) or not str(source_id).strip():
                 # URL-backed identity avoids assigning a fabricated product ID.
                 source_id = "url-" + sha256(link.encode("utf-8")).hexdigest()
             source_id = str(source_id).strip()
