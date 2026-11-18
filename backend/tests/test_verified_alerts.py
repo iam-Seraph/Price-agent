@@ -71,7 +71,7 @@ class AlertOutboxTests(unittest.TestCase):
     def test_queue_is_released_and_capped_for_retries(self) -> None:
         self.alerts.set_channel(self.watch_id, "EMAIL")
         self.alerts.enqueue_if_qualified(self.watch_id, self.current.offer_id)
-        first = self.alerts.claim_deliveries(now=self.now)
+        first = self.alerts.claim_deliveries(now=self.now+timedelta(seconds=1))
         self.assertEqual(len(first), 1)
         self.assertEqual(self.alerts.claim_deliveries(now=self.now), [])
         state = self.alerts.complete_delivery(first[0], success=False,
