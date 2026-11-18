@@ -21,6 +21,9 @@ The backend uses **integer INR paisa** for prices. The legacy root agent uses **
 Use **Python 3.11+** for the whole repository. In VS Code, open this repository and choose **Terminal → New Terminal**. In PowerShell from the repository root:
 
 ```powershell
+git status                  # Check for local changes first
+git switch main
+git pull --ff-only origin main
 python --version
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
