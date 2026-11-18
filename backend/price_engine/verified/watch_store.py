@@ -144,3 +144,16 @@ class WatchStore:
                     VALUES(?,?,?,?,?,?,?,?)
                 """, (uuid4().hex,watch_id,str(watch.get("started_at",at)),
                       at,status,offers_inspected,inserted_observations,message))
+
+
+    def recent_runs(self, *, limit: int = 30) -> list[dict[str, object]]:
+        """Read bounded audit records without exposing provider credentials."""
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("Run history limit must be 1-100")
+        with self.prices.connect() as db:
+            return [dict(row) for row in db.execute("""
+                SELECT run_id,watch_id,started_at,completed_at,status,
+                       offers_inspected,inserted_observations,message
+                FROM verified_watch_runs
+                ORDER BY completed_at DESC,run_id DESC LIMIT ?
+            """, (limit,)).fetchall()]
