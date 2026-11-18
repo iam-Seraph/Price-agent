@@ -2,7 +2,7 @@
 
 Python learning project with three **separate** workflows: mock-data ReAct AI, a standalone live URL price checker, and a hardened SQLite backend with a local read-only dashboard.
 
-> **Status:** Phase 4 dashboard and backend hardening are merged into `main` via [PR #1](https://github.com/iam-Seraph/Price-agent/pull/1) (merge `89f6b0fa`). **Not production-ready**; no automatic retailer tracking. See [AUDIT.md](AUDIT.md) for the complete findings and evidence.
+> **Status (18 November 2026):** Phases 2–5 are merged into `main`. Phase 5 can import up to **1,000,000 accepted Open Food Facts source rows**, but no million-product dataset is bundled or verified imported. **No automatic retailer tracking or AI-to-catalog integration.** Not production-ready. See [PHASE5.md](PHASE5.md) and [AUDIT.md](AUDIT.md).
 
 ## Components
 
@@ -12,8 +12,9 @@ Python learning project with three **separate** workflows: mock-data ReAct AI, a
 | Standalone URL checker | `live_price.py` | Structured metadata from a permitted HTTPS product URL | Can report price unavailable; **no history** |
 | Backend engine | `backend/price_engine/` | Offline fixtures; opt-in approved adapters | Retailer network ingestion disabled by default |
 | Phase 4 dashboard | `backend/price_engine/dashboard.py` | Existing local SQLite history | Read-only; no manual fetch or running scheduler by default |
+| Phase 5 catalog | `backend/price_engine/catalog_import.py` | Real Open Food Facts names, barcodes and metadata | Manual bulk import; read-only `/catalog` search; **no retailer prices** |
 
-The backend uses **integer INR paisa** for prices. The legacy root agent uses **fictional USD**, so their values and verdicts must not be mixed.
+The backend uses **integer INR paisa** for prices. The legacy root agent uses **fictional USD**, so their values and verdicts must not be mixed. Open Food Facts catalog records contain **product identity only**, not validated offers or price history.
 
 ## Requirements and setup
 
