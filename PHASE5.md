@@ -1,9 +1,15 @@
 # Phase 5 — real product catalog (target: 1,000,000)
 
-This phase adds a separate local product-identities catalog to Price Agent.
-It supports importing up to one million rows per invocation from an official
-Open Food Facts bulk export; it does NOT ship one million records in GitHub.
-Real imported product counts are reported by the importer and the stats API.
+**Release status:** Phase 5 was merged to `main` on **18 November 2026**
+through [PR #3](https://github.com/iam-Seraph/Price-agent/pull/3),
+merge `a7cd7e1f12dd7a6e688bc8ea54f01d985fdcf142`.
+
+This phase adds a separate SQLite product-identity catalog. The importer
+can process **up to one million accepted source rows per invocation** by default
+from an official Open Food Facts bulk export. The **actual number of unique
+products may be lower** because of duplicates and exclusions. No dataset is
+committed to GitHub, downloaded automatically or verified imported at
+the million-row scale. Imported counts are reported by the CLI and stats API.
 No generated products or prices are shipped.
 
 ## Source, license and scope
@@ -27,7 +33,9 @@ of thousands of API requests. This pipeline makes no network requests.
 
 ## Windows / VS Code PowerShell
 
-Start from the repository root on the Phase 5 feature branch.
+Start from the repository root on the merged **`main` branch**. First run
+`git switch main` and `git pull --ff-only origin main` if your local
+checkout has not been updated.
 
 ~~~powershell
 python -m pip install -r backend/requirements-dashboard.txt
@@ -53,7 +61,9 @@ export from the official data page and provide its local path.
 
 - Streams .csv, .tsv, .csv.gz, and .tsv.gz without extracting the entire
   file in memory. Accepts official tab-separated and standard comma CSV.
-- Skips records without valid numeric 8–14-digit codes or product names.
+- Skips records without valid numeric 8–14-digit codes or product names,
+  and filters certain age-restricted/intoxicating categories by keywords.
+  This is a best-effort keyword filter, **not an exhaustive content audit**.
   Keeps barcodes as text so leading zeros are preserved.
 - An import cap of 1,000,000 means accepted input rows, NOT guaranteed
   distinct products. Duplicates lower the resulting unique count.
@@ -88,18 +98,41 @@ escaped FTS tokens, and does not return a retailer price. Without an import,
 the API responds with ready: false and empty results. Dashboard mode is
 read-only and still bound to 127.0.0.1.
 
+## Common problems
+
+- **The catalog is empty:** You have not imported an export into the
+  database that the dashboard was started with. Verify that both commands
+  use the **same** `--db` filename and inspect `/api/catalog/stats`.
+- **Repeated demo raises a duplicate-observation error:** This is a known
+  issue with `price_engine.demo` when reusing the same fixture source ID.
+  Run the demo only once for each new database; **skip it** thereafter.
+  Do not delete or reset your database just to fix the demo conflict.
+- **Import target not reached:** `--max-rows` counts accepted input rows,
+  not unique products. Filtered, invalid and duplicate entries reduce
+  `catalog_products`. A true one-million-item count needs enough distinct
+  eligible upstream records and a successful bulk import.
+- **Download or import fails:** Confirm the file exists and is fully
+  downloaded, check free disk space and inspect the local error. The
+  official export may be large and the network transfer can fail.
+- **AI agent still shows mock headphones prices:** Correct: the root
+  `price_agent.py` workflow and catalog are not yet connected.
+
 ## Verification and limits
 
+Run these commands **from the `backend/` directory**:
+
 ~~~powershell
-cd backend
 python -m unittest discover -s tests -v
 python -m compileall -q price_engine tests
 ~~~
 
-Continuous integration runs backend tests on pull requests. Tests use
-illustrative tiny fixtures, not real bulk data. They DO NOT prove a
-million-row import or its latency. Verify local import row count, disk usage,
-query performance and data-license obligations after downloading.
+**Verified GitHub Actions CI:** [Phase 5 PR #3 run](https://github.com/iam-Seraph/Price-agent/actions/runs/44166599779)
+passed **37 backend unittest tests** and Python compilation under Python 3.11.
+The tests use illustrative local fixtures, not the upstream bulk export.
+They **do not** prove a million-row import or low-latency queries at that
+scale. Strict mypy, Hypothesis, licensed retailer price sourcing and
+production load benchmarks remain unverified. Inspect the real import count
+and measure disk/query performance on your own machine.
 
 The root price_agent.py remains a separate mock-data Groq ReAct prototype.
 Its USD prices are NOT linked to the real open catalog. Actual retailer
