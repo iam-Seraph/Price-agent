@@ -150,6 +150,31 @@ class SQLiteAnalysisTests(unittest.TestCase):
         self.assertEqual(result["analyses"][0]["offer_id"], quote.offer_id)
         self.assertFalse(result["live_provider_called"])
 
+    def test_out_of_stock_quotes_do_not_create_false_historical_lows(self) -> None:
+        baseline = make_quote(when=self.now-timedelta(days=4), cents=15000)
+        self.store.persist(baseline)
+        out_of_stock = make_quote(when=self.now-timedelta(days=3), cents=100)
+        self.store.persist(replace(out_of_stock, stock="OUT_OF_STOCK"))
+        current = make_quote(when=self.now, cents=12000)
+        self.store.persist(current)
+        report = analyze_offer(self.store, current.offer_id, "150", now=self.now)
+        self.assertEqual(report["sample_count_30d"], 2)
+        self.assertEqual(report["all_time_low_minor"], 12000)
+        self.assertEqual(report["low_30d_minor"], 12000)
+
+    def test_mismatched_budget_currency_is_rejected(self) -> None:
+        offer = make_quote(when=self.now)
+        self.store.persist(offer)
+        stream = io.StringIO()
+        with redirect_stdout(stream):
+            exit_code = cli_main(["--db", str(self.store.path),
+                                  "--offer-id", offer.offer_id, "--budget", "100",
+                                  "--currency", "USD"])
+        self.assertEqual(exit_code, 2)
+        result = json.loads(stream.getvalue())
+        self.assertEqual(result["status"], "ERROR")
+        self.assertIn("currency", result["message"].lower())
+
 
 if __name__ == "__main__":
     unittest.main()
