@@ -14,6 +14,10 @@ No generated products or prices are shipped.
 
 ## Source, license and scope
 
+**Coverage:** Open Food Facts primarily contains food and grocery products.
+It is **not** a million-item electronics/phone catalog. Other product
+categories require a separate lawful, appropriately licensed data source.
+
 - Source: https://world.openfoodfacts.org/data
 - Bulk export: https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz
 - Format: UTF-8 tab-separated fields (despite the .csv extension), gzip.
