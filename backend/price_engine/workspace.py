@@ -36,8 +36,14 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
     @app.middleware("http")
     async def local_write_origin(request: Request, call_next):
         # Local, unauthenticated development server: block cross-site browser writes.
-        if request.url.path.startswith("/api/workspace/") and request.method == "POST":
+        is_workspace = request.url.path.startswith("/api/workspace/")
+        is_verified = request.url.path.startswith("/api/verified/")
+        if request.method == "POST" and (is_workspace or is_verified):
             origin = request.headers.get("origin")
+            if is_verified and not origin:
+                return JSONResponse({"detail": "Origin header required for local write"}, status_code=403)
+            if request.headers.get("sec-fetch-site") == "cross-site":
+                return JSONResponse({"detail": "Cross-site writes are disabled"}, status_code=403)
             if origin:
                 parsed = urlsplit(origin)
                 if (parsed.scheme not in {"http", "https"}
