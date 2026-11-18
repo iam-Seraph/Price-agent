@@ -31,14 +31,22 @@ Do not treat the pytest/unittest pass as a substitute for strict typing.
 Still inside `backend/`:
 
 ```powershell
-python -m price_engine.demo --db price_engine.sqlite3
-python -m price_engine.dashboard --db price_engine.sqlite3 --host 127.0.0.1 --port 8000
+# Only if you have NOT already initialized this demo filename:
+python -m price_engine.demo --db demo_fresh.sqlite3
+python -m price_engine.dashboard --db demo_fresh.sqlite3 --host 127.0.0.1 --port 8000
 ```
 
-Open <http://127.0.0.1:8000>. The demo uses an **offline synthetic HTML
-fixture**, not a real retailer quote. The second run of the demo against the
-same database reports `inserted: False` because the fixture uses a stable
-record ID.
+Open <http://127.0.0.1:8000> for price history and
+<http://127.0.0.1:8000/catalog> for the Phase 5 catalog. The demo uses
+an **offline synthetic HTML fixture**, not a live retailer quote. Run
+the demo command **only once per new database filename**. Re-running it
+against an existing database can raise
+`ValueError: Conflicting duplicate observation ID or source record`:
+the fixture reuses a source record ID but supplies a new observation
+timestamp. This is deliberate append-only storage protection. Preserve
+your database; skip the demo step on subsequent runs, or select a new
+database filename. The catalog page displays no imported products until
+you explicitly run the Open Food Facts importer.
 
 ### Endpoints
 
@@ -48,6 +56,9 @@ record ID.
 | `GET /api/listings?limit=50&offset=0` | Active listings with latest verified status, integer paisa, formatted price, stale indicator, and up to 60 accepted 30-day trend samples |
 | `GET /api/listings/{listing_id}/history?days=30` | Accepted, in-stock observations in UTC, exact paisa fields, count, total, rounded display average, low, and at most 10,000 chart points |
 | `GET /api/health` | Read-only DB and configured-scheduler status (`NOT_CONFIGURED` by default) |
+| `GET /catalog` | Phase 5 product catalog UI with Open Food Facts attribution |
+| `GET /api/catalog/stats` | Actual imported product count and last import timestamp |
+| `GET /api/catalog/search?q=oats&limit=25&offset=0` | FTS5 indexed lookup by name/brand/category; at most 100 results per page |
 
 The dashboard uses separate `file:...?...mode=ro` SQLite connections,
 `PRAGMA query_only=ON`, short read transactions, parameterized SQL and
@@ -114,43 +125,78 @@ exposed, verified strict mypy and Hypothesis checks, and real-world load
 measurements are still required. Do **not** switch on retailer extraction
 based solely on fixture tests.
 
-## Release and documentation status
+## Phase 5 — imported open-data catalog
 
-The Phase 2 hardening and Phase 4 dashboard code was merged to GitHub `main`
-via [PR #1](https://github.com/iam-Seraph/Price-agent/pull/1) on 2026-11-18
-(merge commit `89f6b0fa343502797ba697252afb021497ac0b66`).
-See the [root README](../README.md) for the consolidated project quick start,
-and [AUDIT.md](../AUDIT.md) for preserved findings, historical test evidence,
-actual published commit hashes, and outstanding limitations. Those historical
-offline test results are not fresh GitHub CI results.
+Phase 5 is **merged into `main`** through [PR #3](https://github.com/iam-Seraph/Price-agent/pull/3) (merge `a7cd7e1f12dd7a6e688bc8ea54f01d985fdcf142`).
+This is a separate **Open Food Facts** food/grocery product-identity
+catalog, not a general electronics catalog or a price-source adapter. New components:
 
-## Phase 5 — real product catalog
+- `migrations/002_catalog.sql`: independent `product_catalog` and
+  `catalog_import_runs` tables, FTS5 index with insert/update/delete
+  triggers. The Phase 1 `001_initial.sql` and append-only price-history
+  triggers are unchanged.
+- `price_engine/catalog_import.py`: streaming compressed/uncompressed
+  official CSV/TSV export, numeric barcode validation, restricted-category
+  exclusions, 2,000-row default upsert batches and actual-count reporting.
+- `price_engine/catalog_api.py`: read-only FTS5 search and stats routes.
+  The UI shows source links, never inferred prices.
+- `price_engine/templates/catalog.html` and `static/catalog.js`:
+  paginated browser UI. Search uses query parameters (max 100 chars),
+  at most 100 results/page, and offsets up to 1,000,000.
 
-The separate Open Food Facts importer and FTS5 search page live on the Phase 5
-feature branch. They add real product identities only; they do NOT add live
-retailer prices, stock or AI-agent linkage. The official bulk export is large,
-downloaded by the user, and kept out of Git.
+The import cap is **accepted source rows, not unique products**. Invalid
+or duplicate records can reduce the unique count below the target.
+No million-row import or load benchmark is established by unit tests.
 
-From the repo root (PowerShell):
+### Import on Windows (PowerShell)
+
+Use the **same SQLite database filename** for the importer and dashboard.
+If you already have `backend/demo_fresh.sqlite3`, skip the demo setup.
 
 ~~~powershell
+# From repository root:
 python -m pip install -r backend/requirements-dashboard.txt
 New-Item -ItemType Directory -Force backend/data | Out-Null
 curl.exe -L --fail --retry 3 "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz" -o "backend/data/openfoodfacts.csv.gz"
 cd backend
+# Optional first sample run:
+python -m price_engine.catalog_import --input data/openfoodfacts.csv.gz --db demo_fresh.sqlite3 --max-rows 10000
+# Target up to one million accepted input rows:
 python -m price_engine.catalog_import --input data/openfoodfacts.csv.gz --db demo_fresh.sqlite3 --max-rows 1000000
 python -m price_engine.dashboard --db demo_fresh.sqlite3 --host 127.0.0.1 --port 8000
 ~~~
 
-Open http://127.0.0.1:8000/catalog for indexed product search.
-Use the SAME database for the import and dashboard. The importer creates the
-catalog schema; the existing demo database supplies the older price schema.
+Open `http://127.0.0.1:8000/catalog`, then `/api/catalog/stats`
+for the *actual* unique product count. Large exports can consume many GB
+of network and disk. Upstream export downloads are user-initiated, not
+shipped in the Git repository or executed by CI. When the named SQLite
+database does **not exist**, create the legacy price schema with the
+demo command **once** before opening the overview dashboard.
 
-New read-only routes: GET /catalog, GET /api/catalog/stats, and
-GET /api/catalog/search (q, limit<=100, offset). The catalog is independent
-of products, retailer_listings, and append-only price_history tables.
-Tests: python -m unittest discover -s tests -v from backend.
+Open Food Facts data is community-maintained and licensed under **ODbL**.
+Give contributors attribution and follow database share-alike obligations.
+Product names, codes, categories and source links do **not** establish
+retailer prices, stock or a trustworthy seller rating. See [PHASE5.md](../PHASE5.md).
 
-For data provenance, ODbL obligations, import limits, troubleshooting and
-clear distinctions between a 1M-row target and actually imported records,
-see [PHASE5.md](../PHASE5.md).
+## Verification and release history
+
+- **PR #1** ([hardening/dashboard](https://github.com/iam-Seraph/Price-agent/pull/1)):
+  18 November 2026, merge `89f6b0fa343502797ba697252afb021497ac0b66`.
+  Original offline release evidence: 34 backend unittest tests.
+- **PR #2** ([docs/audit sync](https://github.com/iam-Seraph/Price-agent/pull/2)):
+  18 November 2026, merge `5deaee07080b3e2f201a112f7a73f832d154af87`.
+- **PR #3** ([Phase 5](https://github.com/iam-Seraph/Price-agent/pull/3)):
+  18 November 2026, merge `a7cd7e1f12dd7a6e688bc8ea54f01d985fdcf142`.
+  [GitHub Actions](https://github.com/iam-Seraph/Price-agent/actions/runs/44166599779):
+  **37 backend unittest tests passed** with Python 3.11, and Python
+  compilation passed. These tests used small local fixtures, not real
+  bulk downloads.
+
+Strict mypy and Hypothesis are still not independently verified, nor is
+a million-row import, live-retailer authorization or production load.
+The dashboard is **local and unauthenticated**. The root ReAct agent still
+uses separate USD mock data, not imported catalog records.
+
+Read the [root README](../README.md) for a unified quick start,
+[PHASE5.md](../PHASE5.md) for the complete import/license guide and
+[AUDIT.md](../AUDIT.md) for preserved historical audit findings.

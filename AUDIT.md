@@ -1,16 +1,26 @@
 # Price Agent — Phase 0–4 hardening and dashboard audit
 
-**Current GitHub release state (verified 2026-11-18):** Phase 2 hardening and
-the Phase 4 read-only dashboard were merged from GitHub `audit/hardening`
-into `main` through [PR #1](https://github.com/iam-Seraph/Price-agent/pull/1),
-merge commit `89f6b0fa343502797ba697252afb021497ac0b66`. This document
-preserves the original Phase 0–4 evidence as a **historical audit**. Mentions
-of an unpushed or disconnected branch below describe the **earlier audit
-environment at that time**, not the current GitHub release. The merged branch
-contained five commits affecting 28 files. No source database migration was
-changed. External retailer behavior and strict type/property tests remain
-unverified; the application is **not production-ready**. For commands and
-architecture, start with [README.md](README.md) and [backend/README.md](backend/README.md).
+**Current GitHub release state (verified 2026-11-18):** Phase 2 hardening
+and the Phase 4 read-only dashboard were merged through
+[PR #1](https://github.com/iam-Seraph/Price-agent/pull/1). Documentation
+was synchronized through [PR #2](https://github.com/iam-Seraph/Price-agent/pull/2),
+and the separate real-product catalog (Phase 5) was merged through
+[PR #3](https://github.com/iam-Seraph/Price-agent/pull/3). The Phase 5
+merge commit is `a7cd7e1f12dd7a6e688bc8ea54f01d985fdcf142`.
+
+This document **preserves the original Phase 0–4 findings and local audit
+evidence as history**. Mentions of an unpushed branch, absent scheduler,
+missing product catalog or "not modified GitHub" in the early sections
+describe the earlier audit environment **at the time**, not today's merged
+repository. The original `001_initial.sql` append-only price-history
+schema was not changed; Phase 5 added a **separate**
+`002_catalog.sql` schema. External retailer behavior, production-scale
+catalog ingestion and strict type/property tests remain unverified:
+the application is **not production-ready**.
+
+For current installation and usage, read [README.md](README.md),
+[PHASE5.md](PHASE5.md), and [backend/README.md](backend/README.md).
+For the new release evidence, see the Phase 5 appendix at the bottom.
 
 ## Scope and provenance
 
@@ -314,3 +324,76 @@ quick-start and current project summary; [backend/README.md](backend/README.md)
 is the implementation/runbook detail; this `AUDIT.md` retains the complete
 historical finding matrix, test evidence, published commit history, and
 remaining security/reliability limitations.
+
+
+---
+
+## Phase 5 — real-product catalog publication and current evidence (2026-11-18)
+
+**Scope:** This release adds an **independent** real food/grocery product
+identity catalog from Open Food Facts, not a general electronics dataset,
+real retailer quotes or price histories. The original ReAct USD mock agent
+remains separate. The Phase 5 importer requires a user-downloaded
+Open Food Facts bulk file; no million-product SQLite database was committed
+or automatically populated.
+
+| Milestone | GitHub / evidence |
+| --- | --- |
+| Previous `main` before Phase 5 | `5deaee07080b3e2f201a112f7a73f832d154af87` (PR #2 documentation merge) |
+| Feature branch | `feat/phase5-real-product-catalog` |
+| Merged pull request | [PR #3](https://github.com/iam-Seraph/Price-agent/pull/3), merged 18 November 2026 |
+| Merge commit | `a7cd7e1f12dd7a6e688bc8ea54f01d985fdcf142` |
+| Passed CI | [GitHub Actions run 44166599779](https://github.com/iam-Seraph/Price-agent/actions/runs/44166599779): **37 backend unittest tests**, Python 3.11, compilation |
+| Data-source and license | Open Food Facts official export; database under ODbL obligations |
+| Bulk import count | **Not independently run or verified**; 1,000,000 accepted source rows is the default configured target, not measured unique catalog contents |
+
+### New implementation contracts
+
+- **Independent schema:** `backend/migrations/002_catalog.sql` adds
+  `product_catalog`, `catalog_import_runs`, an FTS5 index and index
+  synchronization triggers. The existing Phase 1 schema and price-history
+  triggers in `001_initial.sql` were preserved.
+- **Importer:** `backend/price_engine/catalog_import.py` streams a local
+  CSV/TSV/gzip export, validates barcodes and names, applies best-effort
+  restricted-category filtering, and upserts bounded batches with an
+  actual database row count. The import does **not** verify prices, scrape
+  retailers, or automatically download source records.
+- **Read-only API and UI:** `GET /catalog`, `GET /api/catalog/stats`,
+  `GET /api/catalog/search`; server-side indexed query, pagination,
+  explicit source links and attribution. The dashboard remains local,
+  read-only and unauthenticated.
+- **Tests:** `backend/tests/test_catalog.py` adds fixture-based gzip/CSV
+  import, idempotent duplicate/upsert, FTS search, pagination and
+  separation-from-price-history cases. The successful 37-test CI
+  result includes the pre-existing backend suite.
+- **Demo limitation:** `price_engine.demo` may raise
+  `ValueError: Conflicting duplicate observation ID or source record`
+  when rerun against a populated DB. The demo uses the same fixture
+  source ID with a fresh timestamp. This is not evidence of failed
+  catalog ingestion or a missing SQLite dependency. Preserve the
+  existing database or use a new filename.
+
+### Explicitly unverified / next gates
+
+1. **One million unique real items** have **not** been shown imported.
+   The CLI cap counts accepted source rows; duplicates and filtering
+   reduce the resulting unique table size. Bulk download, storage
+   footprint, indexing throughput and query latency require real-world
+   measurement.
+2. **No verified retailer prices or availability** are present in the
+   Open Food Facts catalog. It must not drive price-alert decisions
+   without a separate trusted retailer-source and validation contract.
+3. **Root AI tools remain disconnected** from this catalog and the
+   backend's verified INR-paisa history. Existing F13 remains open.
+4. The prior open production/security requirements remain: DNS pinning
+   (F19), strict mypy/Hypothesis checks (F21), authorized retailer
+   contracts, process-shared rate/circuit coordination, durable schema
+   migrations, observability, public auth/TLS and production load tests.
+5. ODbL attribution/share-alike obligations must be reviewed for any
+   redistributed derived database. Source data quality and category
+   classification need independent validation.
+
+The updated root [README.md](README.md) is the current quick start;
+[PHASE5.md](PHASE5.md) documents importing and checking real counts.
+This appendix **adds** release evidence and does not rewrite the
+historical Phase 0–4 matrix or its originally observed results.
