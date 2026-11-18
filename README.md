@@ -157,24 +157,20 @@ Price-agent/
 
 ## Security and remaining work
 
-- Keep keys in local `.env` or a secure secrets manager, never in GitHub, screenshots, logs or issues. Rotate any previously exposed key. A `.gitignore` cannot erase already committed secrets.
-- Current limitations include missing authorized retailer API adapters/contract tests; DNS-pinned SSRF-safe connections; cross-process rate/circuit coordination; ingestion-attempt logging and observability; durable migration versions; the root ReAct-to-SQLite integration; authenticated/TLS-protected public deployment; independently verified mypy/Hypothesis and real load testing.
-- Existing database schema and append-only history triggers were unchanged by the hardening release. Never enable third-party retailer ingestion based only on fixture tests.
+- Keep API keys in local `.env` or a secrets manager, never in Git or logs. Rotate any key exposed previously. `.gitignore` does not erase committed secrets.
+- Keep the unauthenticated dashboard on `127.0.0.1`. Do not expose it without authentication, TLS and operational controls.
+- A real product barcode/name is **not** a verified retailer price or stock observation. Phase 5 does not connect the root ReAct mock agent, backend retailer listings or automatic polling.
+- Unfinished engineering work includes authorized retailer API adapters, DNS-pinned SSRF-safe networking, cross-process rate/circuit control, ingestion-attempt logging, durable migration versioning, strict mypy/Hypothesis verification, and genuine 1M-row import/search performance measurements.
+- Open Food Facts attribution and ODbL/database redistribution obligations apply to derivative databases. Importer category exclusions are best-effort and must not be treated as exhaustive.
 
-**Documentation roles:** This root README consolidates what users need to install, run, test and assess project maturity. [backend/README.md](backend/README.md) is the detailed API/architecture guide. [AUDIT.md](AUDIT.md) is the complete historical audit and evidence record; it is retained rather than deleting findings.
+**Documentation:** [PHASE5.md](PHASE5.md) explains the bulk import and license, [backend/README.md](backend/README.md) documents the backend/API, and [AUDIT.md](AUDIT.md) preserves historical findings and merges.
 
 ## Release history
 
-- **2026-11-18:** Phase 2 hardening + Phase 4 dashboard merged from `audit/hardening` to `main` through [PR #1](https://github.com/iam-Seraph/Price-agent/pull/1); merge commit `89f6b0fa343502797ba697252afb021497ac0b66`. Five branch commits, 28 changed files, no force-push.
+| Date | Release | Verified GitHub merge |
+| --- | --- | --- |
+| 2026-11-18 | Backend hardening and Phase 4 dashboard | [PR #1](https://github.com/iam-Seraph/Price-agent/pull/1), `89f6b0fa343502797ba697252afb021497ac0b66` |
+| 2026-11-18 | Documentation and audit synchronization | [PR #2](https://github.com/iam-Seraph/Price-agent/pull/2), `5deaee07080b3e2f201a112f7a73f832d154af87` |
+| 2026-11-18 | Phase 5 real catalog importer, FTS5 search, UI, tests and CI | [PR #3](https://github.com/iam-Seraph/Price-agent/pull/3), `a7cd7e1f12dd7a6e688bc8ea54f01d985fdcf142` |
 
-## Phase 5 — searchable real-product catalog (feature branch)
-
-This branch adds a separate SQLite catalog with an import target of **1,000,000
-real Open Food Facts records**, indexed FTS5 name/brand/category search and a
-local read-only **/catalog** page. The database itself is NOT committed or
-automatically downloaded. The import output and the stats API report the true
-unique product count. This source does **not** contain verified store prices;
-the existing AI agent and retailer history remain separate.
-
-See [PHASE5.md](PHASE5.md) for the bulk export source, ODbL attribution,
-PowerShell commands, tests, database limitations and upgrade boundaries.
+All three are merged into `main`. The Phase 5 release provides **import capability**, not a preloaded million-item dataset or real retailer-price feed.
