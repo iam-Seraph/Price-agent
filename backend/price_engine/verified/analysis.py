@@ -44,10 +44,12 @@ def analyze_offer(store: VerifiedPriceStore, offer_id: str, budget: str | int | 
                    MIN(price_minor) AS low_minor
             FROM verified_offer_observations
             WHERE offer_id=? AND observed_at>=? AND observed_at<=?
+              AND stock='IN_STOCK' AND provenance='PROVIDER_REPORTED'
         """, (offer_id,since,end)).fetchone()
         all_time_low = db.execute("""
             SELECT MIN(price_minor) FROM verified_offer_observations
             WHERE offer_id=? AND observed_at<=?
+              AND stock='IN_STOCK' AND provenance='PROVIDER_REPORTED'
         """, (offer_id,end)).fetchone()[0]
     if latest is None:
         raise ValueError("No observed prices for offer")
