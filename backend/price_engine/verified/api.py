@@ -10,6 +10,7 @@ from fastapi.templating import Jinja2Templates
 
 from .analysis import analyze_offer
 from .store import VerifiedPriceStore
+from .watch_store import WatchStore
 
 TEMPLATES = Jinja2Templates(
     directory=str(Path(__file__).resolve().parents[1] / "templates"))
@@ -18,6 +19,7 @@ TEMPLATES = Jinja2Templates(
 def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
     """Install read-only endpoints; no retailer fetch is triggered by a GET."""
     store = VerifiedPriceStore(db_path)
+    watches = WatchStore(db_path)
 
     @app.get("/verified", response_class=HTMLResponse)
     def verified_page(request: Request):
@@ -26,6 +28,14 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
     @app.get("/api/verified/status")
     def verified_status():
         return store.stats()
+
+    @app.get("/api/verified/watches")
+    def list_verified_watches(limit: int = Query(100, ge=1, le=200)):
+        return {"watches": watches.list_watches(limit)}
+
+    @app.get("/api/verified/watch-runs")
+    def verified_watch_audit(limit: int = Query(30, ge=1, le=100)):
+        return {"runs": watches.recent_runs(limit=limit)}
 
     @app.get("/api/verified/offers")
     def list_verified_offers(limit: int = Query(20, ge=1, le=100)):
