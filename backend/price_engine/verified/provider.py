@@ -40,6 +40,9 @@ def parse_shopping_results(payload: dict[str, Any], observed_at: datetime,
         try:
             merchant = item["source"]
             title = item["title"]
+            if (not isinstance(merchant, str) or not merchant.strip()
+                    or not isinstance(title, str) or not title.strip()):
+                continue
             link = item.get("link") or item.get("product_link")
             if not isinstance(link, str):
                 continue
@@ -66,7 +69,7 @@ def parse_shopping_results(payload: dict[str, Any], observed_at: datetime,
                                          default=str).encode("utf-8")).hexdigest()
             quote = ProviderOffer(
                 provider="SERPAPI_GOOGLE_SHOPPING", source_product_id=source_id,
-                merchant=str(merchant).strip(), title=str(title).strip(),
+                merchant=merchant.strip(), title=title.strip(),
                 product_url=link, currency=currency, price_minor=minor, stock=stock,
                 seller_rating=seller_rating, observed_at=observed_at,
                 evidence_sha256=checksum, event_id=new_event_id(),
