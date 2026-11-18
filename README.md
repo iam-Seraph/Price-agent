@@ -29,35 +29,57 @@ python -m pip install -r backend/requirements-dashboard.txt
 
 For macOS/Linux activate with `source .venv/bin/activate` instead. The dashboard dependencies include the root application requirements. Install `backend/requirements-dev.txt` separately to run pytest, mypy and property-test tooling.
 
-## Start the Phase 4 dashboard (offline)
+## Start the local dashboard (Phases 4 and 5)
 
-From the repository root after installation:
+After installing dependencies, from the repository root:
 
-```powershell
+~~~powershell
 cd backend
-python -m unittest discover -s tests -v
-python -m price_engine.demo --db price_engine.sqlite3
-python -m price_engine.dashboard --db price_engine.sqlite3 --host 127.0.0.1 --port 8000
-```
+# Run only once, when creating a NEW demo database:
+python -m price_engine.demo --db demo_fresh.sqlite3
+python -m price_engine.dashboard --db demo_fresh.sqlite3 --host 127.0.0.1 --port 8000
+~~~
 
-Open **http://127.0.0.1:8000**. Keep the terminal open and press **Ctrl+C** to stop it.
+Open **http://127.0.0.1:8000** for sample price history and **http://127.0.0.1:8000/catalog** for product catalog search. Keep the terminal open; press **Ctrl+C** to stop the server. If `demo_fresh.sqlite3` already exists and contains the demo record, **skip the demo command**.
 
-- The demo creates a sample database from a **local synthetic HTML fixture**, not an actual retailer quote. Rerunning it normally prints `inserted: False` because the demo observation ID is fixed.
-- The dashboard reads an **existing** DB; it cannot create or migrate one. SQLite connections use read-only `mode=ro`, `PRAGMA query_only=ON` and parameterized SQL. Append-only history is never written by the UI.
-- It displays active listings with `VALID_PRICE`, `OUT_OF_STOCK`, `QUARANTINED` or `UNAVAILABLE` states, recent sparklines, and stale markers (older than 24 hours). Browser data refresh is every 30 seconds.
-- There is **no product-registration UI, manual retailer fetch, or running polling scheduler**. The scheduler health says `NOT_CONFIGURED` by default.
-- This server has **no authentication**. Only bind it to `127.0.0.1`; do not expose it publicly.
+**Known demo rerun error:** The demo uses a stable source record ID with a new timestamp. Re-running it against an existing populated database can raise `ValueError: Conflicting duplicate observation ID or source record`. The database conflict is intentional in append-only storage. Preserve the existing file and skip the demo, or choose a NEW database filename. Do not delete a database containing records you need. The demo uses synthetic local HTML, **not a genuine retailer quote**.
 
-### Dashboard routes
+- The dashboard uses SQLite read-only connections and cannot migrate, register products, trigger retailer requests or start a scheduler.
+- Price-history statuses: `VALID_PRICE`, `OUT_OF_STOCK`, `QUARANTINED` and `UNAVAILABLE`; observations over 24 hours old are marked stale. Browser data refreshes every 30 seconds.
+- The Phase 5 catalog remains empty until a local export is imported. It is separate from retailer prices and the Groq AI agent.
+- The server has no authentication; **only bind it to `127.0.0.1`**.
+
+### Read-only routes
 
 | Route | Description |
 | --- | --- |
-| `GET /` | Responsive local UI |
-| `GET /api/listings?limit=50&offset=0` | Active listings, latest validated state, exact paisa/rupee display, 30-day trends |
-| `GET /api/listings/{listing_id}/history?days=30` | Accepted in-stock history, exact total/count/low and rounded display average |
-| `GET /api/health` | Read-only database check and scheduler status |
+| `GET /` | Price-history overview |
+| `GET /api/listings?limit=50&offset=0` | Active listings and latest observed status |
+| `GET /api/listings/{listing_id}/history?days=30` | Accepted in-stock price history |
+| `GET /api/health` | Database and scheduler status |
+| `GET /catalog` | Searchable real-product catalog page |
+| `GET /api/catalog/stats` | True count of unique imported products and last completed import |
+| `GET /api/catalog/search?q=oats&limit=25&offset=0` | Indexed product/brand/category search, up to 100 rows/page |
 
-See [backend/README.md](backend/README.md) for endpoint details and implementation.
+See [backend/README.md](backend/README.md) for the implementation and [PHASE5.md](PHASE5.md) for catalog import details.
+
+## Import real-product data (Phase 5)
+
+**Import is optional and can require significant disk space and bandwidth.** Download the official Open Food Facts bulk export. From the repository root:
+
+~~~powershell
+New-Item -ItemType Directory -Force backend/data | Out-Null
+curl.exe -L --fail --retry 3 "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz" -o "backend/data/openfoodfacts.csv.gz"
+cd backend
+# Test a small import first:
+python -m price_engine.catalog_import --input data/openfoodfacts.csv.gz --db demo_fresh.sqlite3 --max-rows 10000
+# Attempt up to one million accepted input rows:
+python -m price_engine.catalog_import --input data/openfoodfacts.csv.gz --db demo_fresh.sqlite3 --max-rows 1000000
+~~~
+
+Use the **same SQLite filename** for the import and the dashboard. The importer accepts real product identities and metadata from Open Food Facts, **not price quotes**. `--max-rows` limits accepted input rows, not guaranteed distinct stored products. Duplicates, invalid records, and category exclusions can reduce the final count. View `/api/catalog/stats` to verify the actual count. The export is not bundled or fetched by CI; no million-product import or benchmark has been confirmed.
+
+The source is attributed to **Open Food Facts contributors** and subject to **ODbL** obligations. See [PHASE5.md](PHASE5.md) for source/license information, accepted formats, filtering, and troubleshooting.
 
 ## Run the root mock-data ReAct agent
 
