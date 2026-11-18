@@ -81,6 +81,19 @@ class VerifiedPriceStore:
                 (offer_id,)).fetchone()
             return dict(row) if row else None
 
+    def stats(self) -> dict[str, object]:
+        """Basic local ingestion metrics, computed from actual persisted rows."""
+        with self.connect() as db:
+            offers = int(db.execute("SELECT COUNT(*) FROM verified_offers").fetchone()[0])
+            observations = int(db.execute(
+                "SELECT COUNT(*) FROM verified_offer_observations").fetchone()[0])
+            latest = db.execute(
+                "SELECT MAX(observed_at) FROM verified_offer_observations").fetchone()[0]
+        return {"offers": offers, "observations": observations,
+                "last_observed_at": latest,
+                "provenance": "PROVIDER_REPORTED",
+                "live_api_connected": False}
+
     def history(self, offer_id: str, *, days: int = 30,
                 limit: int = 300) -> list[dict[str, object]]:
         """Fetch the most recent provider observations, ordered for charting."""
