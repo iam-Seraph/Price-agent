@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import re
+from decimal import Decimal
+
+from .analysis import analyze_offer
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -55,3 +58,64 @@ class AlertStore:
                 SELECT rule_id,watch_id,channel,enabled,created_at
                 FROM verified_alert_rules ORDER BY created_at DESC LIMIT ?
             """, (limit,)).fetchall()]
+
+
+    def enqueue_if_qualified(self, watch_id: str, offer_id: str) -> int:
+        """Queue deterministic ALERT decisions only; never infer missing seller facts."""
+        if not isinstance(watch_id, str) or not _ID.fullmatch(watch_id):
+            raise ValueError("Invalid watch ID")
+        with self.watches.prices.connect() as db:
+            rule = db.execute("""
+                SELECT budget_minor,currency,enabled FROM verified_watch_queries
+                WHERE watch_id=?
+            """, (watch_id,)).fetchone()
+        if rule is None or not rule["enabled"]:
+            return 0
+        offer = self.watches.prices.offer(offer_id)
+        if offer is None or offer["currency"] != rule["currency"]:
+            return 0
+        budget = Decimal(int(rule["budget_minor"])) / Decimal(100)
+        report = analyze_offer(self.watches.prices, offer_id, budget)
+        if report["decision"] != "ALERT":
+            return 0
+        observed_day = str(report["last_observed_at"])[:10]
+        now = datetime.now(timezone.utc)
+        stamp = watch_time(now)
+        count = 0
+        with self.watches.prices.connect() as db:
+            with db:
+                db.execute("BEGIN IMMEDIATE")
+                channels = db.execute("""
+                    SELECT r.channel FROM verified_alert_rules r
+                    JOIN verified_watch_queries w ON w.watch_id=r.watch_id
+                    WHERE r.watch_id=? AND r.enabled=1 AND w.enabled=1
+                """, (watch_id,)).fetchall()
+                for row in channels:
+                    channel = str(row["channel"])
+                    pending = db.execute("""
+                        SELECT 1 FROM verified_alert_outbox
+                        WHERE watch_id=? AND offer_id=? AND channel=?
+                          AND status IN ('QUEUED','LEASED')
+                        LIMIT 1
+                    """, (watch_id,offer_id,channel)).fetchone()
+                    if pending:
+                        continue
+                    last_sent = db.execute("""
+                        SELECT delivered_at FROM verified_alert_outbox
+                        WHERE watch_id=? AND offer_id=? AND channel=? AND status='DELIVERED'
+                        ORDER BY delivered_at DESC LIMIT 1
+                    """, (watch_id,offer_id,channel)).fetchone()
+                    if last_sent:
+                        delivered_at = datetime.fromisoformat(
+                            str(last_sent["delivered_at"]).replace("Z","+00:00"))
+                        if now - delivered_at < timedelta(hours=24):
+                            continue
+                    cursor = db.execute("""
+                        INSERT OR IGNORE INTO verified_alert_outbox
+                        (delivery_id,watch_id,offer_id,channel,observed_day,
+                         price_minor,currency,created_at,status,next_attempt_at)
+                        VALUES(?,?,?,?,?,?,?,?,'QUEUED',?)
+                    """, (uuid4().hex,watch_id,offer_id,channel,observed_day,
+                          report["price_minor"],report["currency"],stamp,stamp))
+                    count += cursor.rowcount
+        return count
