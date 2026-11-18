@@ -330,8 +330,9 @@ remaining security/reliability limitations.
 
 ## Phase 5 — real-product catalog publication and current evidence (2026-11-18)
 
-**Scope:** This release adds an **independent** real-product identity catalog,
-not real retailer quotes or price histories. The original ReAct USD mock agent
+**Scope:** This release adds an **independent** real food/grocery product
+identity catalog from Open Food Facts, not a general electronics dataset,
+real retailer quotes or price histories. The original ReAct USD mock agent
 remains separate. The Phase 5 importer requires a user-downloaded
 Open Food Facts bulk file; no million-product SQLite database was committed
 or automatically populated.
