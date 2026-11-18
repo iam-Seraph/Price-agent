@@ -1,0 +1,35 @@
+name: Verified offers Phase 1 regression
+on:
+  push:
+    branches:
+      - feat/phase1-verified-prices
+    paths:
+      - 'backend/price_engine/verified/**'
+      - 'backend/migrations/003_verified_offers.sql'
+      - 'backend/tests/test_verified_pipeline.py'
+      - 'real_price_agent.py'
+      - '.github/workflows/verified-phase1.yml'
+  pull_request:
+    paths:
+      - 'backend/price_engine/verified/**'
+      - 'backend/migrations/003_verified_offers.sql'
+      - 'backend/tests/test_verified_pipeline.py'
+      - 'real_price_agent.py'
+      - '.github/workflows/verified-phase1.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r backend/requirements-dev.txt
+      - name: Compile Python
+        run: python -m compileall -q backend/price_engine/verified backend/tests/test_verified_pipeline.py real_price_agent.py
+      - name: Run verified pipeline tests
+        working-directory: backend
+        run: python -m unittest discover -s tests -p 'test_verified_pipeline.py' -v
