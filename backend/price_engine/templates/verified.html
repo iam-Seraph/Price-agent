@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Price Agent | Real Offer History</title>
+  <link rel="stylesheet" href="/static/verified.css">
+  <script defer src="/static/verified.js"></script>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">PRICE AGENT / VERIFIED PIPELINE</p>
+      <h1>Source-attributed price intelligence</h1>
+      <p class="muted">Provider-reported prices, not independently verified merchant quotations.</p>
+    </div>
+    <nav aria-label="Project navigation"><a href="/">History</a><a href="/catalog">Catalog</a><a href="/workspace">Workspace</a></nav>
+  </header>
+  <main>
+    <section aria-labelledby="summary-title" class="panel">
+      <h2 id="summary-title">Recorded evidence</h2>
+      <div class="metrics">
+        <div><strong id="offer-count">—</strong><span>Offers observed</span></div>
+        <div><strong id="observation-count">—</strong><span>Source observations</span></div>
+        <div><strong id="latest-record">—</strong><span>Latest provider timestamp (UTC)</span></div>
+      </div>
+      <p id="overview-status" role="status">Loading stored records…</p>
+    </section>
+    <div class="columns">
+      <section class="panel" aria-labelledby="offers-title">
+        <h2 id="offers-title">Products from stored provider responses</h2>
+        <p class="muted">No sample products are generated when the database is empty.</p>
+        <div class="scroll">
+          <table><thead><tr><th>Product</th><th>Merchant</th><th>Last price</th><th>Stock</th><th>Inspect</th></tr></thead>
+          <tbody id="offers-body"></tbody></table>
+        </div>
+      </section>
+      <section class="panel" aria-labelledby="analysis-title">
+        <h2 id="analysis-title">30-day deal analysis</h2>
+        <p id="selection" class="muted">Select a persisted offer from the table.</p>
+        <form id="budget-form">
+          <label for="budget">Your budget</label>
+          <div class="fields">
+            <select id="currency" aria-label="Budget currency"><option value="INR">INR</option><option value="USD">USD</option></select>
+            <input id="budget" type="text" inputmode="decimal" value="60000" maxlength="30" required pattern="[0-9,]+(\.[0-9]{1,2})?">
+            <button type="submit">Analyze</button>
+          </div>
+        </form>
+        <p id="decision" role="status" aria-live="polite"></p>
+        <ul id="checks" aria-label="Analysis evidence checks"></ul>
+        <h3>Recent recorded prices</h3>
+        <canvas id="history-chart" width="740" height="260" role="img" aria-label="Price history chart"></canvas>
+        <p id="history-text" class="muted">No offer selected.</p>
+      </section>
+    </div>
+  </main>
+  <footer>Local-first project. Prices are not guaranteed current. No model-generated prices appear in this view.</footer>
+</body>
+</html>
