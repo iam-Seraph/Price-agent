@@ -8,6 +8,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
+from collections.abc import Callable
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from hashlib import sha256
@@ -87,26 +89,44 @@ def parse_shopping_results(payload: dict[str, Any], observed_at: datetime,
 
 def search_serpapi(query: str, *, api_key: str | None = None,
                    transport: httpx.BaseTransport | None = None,
-                   limit: int = 5) -> list[ProviderOffer]:
+                   limit: int = 5, retries: int = 2,
+                   sleeper: Callable[[float], None] = time.sleep) -> list[ProviderOffer]:
+    """Use one fixed API origin, with bounded retries only for transient failures."""
     if not isinstance(query, str) or not 2 <= len(query.strip()) <= 120:
         raise ValueError("Search query must be 2-120 characters")
     if type(limit) is not int or not 1 <= limit <= 10:
         raise ValueError("Search limit must be between 1 and 10")
+    if type(retries) is not int or not 0 <= retries <= 3:
+        raise ValueError("Retries must be between 0 and 3")
     key = api_key or os.getenv("SERPAPI_KEY")
     if not key:
         raise ProviderUnavailable("SERPAPI_KEY is not configured; no live data available")
-    try:
-        with httpx.Client(timeout=10.0, follow_redirects=False, trust_env=False,
-                          transport=transport) as client:
-            response = client.get(ENDPOINT, params={
-                "engine": "google_shopping", "q": query.strip(), "gl": "in",
-                "hl": "en", "api_key": key,
-            })
-            response.raise_for_status()
-            if len(response.content) > 2 * 1024 * 1024:
-                raise ProviderUnavailable("Provider response exceeds the parsing limit")
-            payload = response.json()
-    except (httpx.HTTPError, ValueError) as exc:
-        # Avoid exposing query-string credentials in logs or error messages.
-        raise ProviderUnavailable("SerpApi request failed or returned invalid JSON") from None
-    return parse_shopping_results(payload, datetime.now(timezone.utc), limit=limit)
+    with httpx.Client(timeout=10.0, follow_redirects=False, trust_env=False,
+                      transport=transport) as client:
+        for attempt in range(retries + 1):
+            try:
+                response = client.get(ENDPOINT, params={
+                    "engine": "google_shopping", "q": query.strip(), "gl": "in",
+                    "hl": "en", "api_key": key,
+                })
+            except httpx.TransportError:
+                if attempt < retries:
+                    sleeper(0.25 * 2**attempt)
+                    continue
+                raise ProviderUnavailable("SerpApi network failure; no data accepted") from None
+            if response.status_code in (401, 403, 429):
+                raise ProviderUnavailable("SerpApi denied or throttled the request; no retry attempted")
+            if 500 <= response.status_code < 600:
+                if attempt < retries:
+                    sleeper(0.25 * 2**attempt)
+                    continue
+                raise ProviderUnavailable("SerpApi service unavailable after bounded retries")
+            try:
+                response.raise_for_status()
+                if len(response.content) > 2 * 1024 * 1024:
+                    raise ProviderUnavailable("Provider response exceeds the parsing limit")
+                payload = response.json()
+            except (httpx.HTTPError, ValueError):
+                raise ProviderUnavailable("SerpApi response failed validation") from None
+            return parse_shopping_results(payload, datetime.now(timezone.utc), limit=limit)
+    raise ProviderUnavailable("No provider response available")
