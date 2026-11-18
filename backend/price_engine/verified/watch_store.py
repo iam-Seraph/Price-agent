@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -70,3 +70,33 @@ class WatchStore:
                 return db.execute(
                     "UPDATE verified_watch_queries SET enabled=0 WHERE watch_id=? AND enabled=1",
                     (watch_id,)).rowcount == 1
+
+
+    def claim_due(self, *, now: datetime | None = None,
+                  limit: int = 1) -> list[dict[str, object]]:
+        """Acquire short leases under BEGIN IMMEDIATE to avoid parallel polling."""
+        if type(limit) is not int or not 1 <= limit <= 5:
+            raise ValueError("At most five watches may be claimed per batch")
+        clock = now or datetime.now(timezone.utc)
+        moment = watch_time(clock)
+        expires = watch_time(clock + timedelta(minutes=10))
+        with self.prices.connect() as db:
+            with db:
+                db.execute("BEGIN IMMEDIATE")
+                due = db.execute("""
+                    SELECT watch_id,query_text,currency,budget_minor,interval_seconds
+                    FROM verified_watch_queries
+                    WHERE enabled=1 AND next_due_at<=?
+                      AND (lease_expires_at IS NULL OR lease_expires_at<=?)
+                    ORDER BY next_due_at,watch_id LIMIT ?
+                """, (moment,moment,limit)).fetchall()
+                claimed = []
+                for record in due:
+                    item = dict(record)
+                    item["lease_owner"] = uuid4().hex
+                    db.execute("""
+                        UPDATE verified_watch_queries SET lease_owner=?,lease_expires_at=?
+                        WHERE watch_id=?
+                    """, (item["lease_owner"],expires,item["watch_id"]))
+                    claimed.append(item)
+                return claimed
