@@ -140,29 +140,29 @@ python -m benchmarks.loopback
 
 ## Repository map
 
+The code lives in folders, while the project guides stay discoverable at the repository root. Existing CLI commands are preserved by small compatibility launchers.
+
 ~~~text
 Price-agent/
-├── README.md                         # Current status and quick start
-├── PHASE5.md                         # Real-data import, license and caveats
-├── AUDIT.md                          # Original audit and release evidence
-├── .github/workflows/phase5.yml      # Backend CI on pull requests
-├── .env.example                      # Example credentials only
-├── price_agent.py                    # Separate mock USD ReAct agent
-├── live_price.py                     # Separate best-effort URL extractor
-└── backend/
-    ├── README.md                     # Backend and API runbook
-    ├── migrations/001_initial.sql    # Append-only price history
-    ├── migrations/002_catalog.sql    # Catalog + FTS5 indexes
-    ├── price_engine/catalog_import.py
-    ├── price_engine/catalog_api.py
-    ├── price_engine/dashboard.py
-    ├── price_engine/templates/       # Overview + catalog pages
-    ├── price_engine/static/          # Local JavaScript/CSS
-    ├── requirements-dashboard.txt
-    ├── requirements-dev.txt
-    ├── benchmarks/loopback.py
-    └── tests/test_catalog.py         # Phase 5 fixture-based tests
+├── README.md, AUDIT.md, PHASE5.md    # Main documentation
+├── README_UPGRADE.md                 # Workspace upgrade documentation
+├── INTELLIGENCE_STUDIO.md            # Simulation guide
+├── price_agent.py                    # Compatible mock agent command/import
+├── live_price.py                     # Compatible live URL command
+├── price_agent_workspace.py          # Compatible research command
+├── src/                              # Actual standalone agent and checker code
+│   ├── price_agent.py
+│   ├── live_price.py
+│   └── price_agent_workspace.py
+├── data/price_history.json           # Example mock price statistics
+├── backend/                          # SQLite engine, FastAPI dashboard, tests
+├── site/                             # Static portfolio website
+├── .github/workflows/                # Automated checks and backup
+├── requirements.txt                  # Standalone dependencies
+└── .env.example, .gitignore          # Configuration and security
 ~~~
+
+Run `python price_agent.py`, `python live_price.py --help`, or `python price_agent_workspace.py --help` from the repository root. For the dashboard, use the existing `backend/` commands described above. No actual API keys or live price database are committed.
 
 ## Security and remaining work
 
