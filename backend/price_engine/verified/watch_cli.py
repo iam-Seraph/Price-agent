@@ -9,6 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from .monitor import run_due_once
+from .alert_store import AlertStore
 from .watch_store import WatchStore
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -43,10 +44,11 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "disable":
             result = {"disabled": store.disable_watch(args.watch_id)}
         else:
+            alert_store = AlertStore(args.db)
             if not 1 <= args.batch_size <= 5 or not 15 <= args.sleep_seconds <= 3600:
                 parser.error("Batch size must be 1-5 and loop delay 15-3600 seconds")
             if not args.continuous:
-                result = {"runs": run_due_once(store, limit=args.batch_size)}
+                result = {"runs": run_due_once(store, limit=args.batch_size, alerts=alert_store)}
             else:
                 print("Starting opt-in price monitor. Ctrl+C stops it.", flush=True)
                 try:
