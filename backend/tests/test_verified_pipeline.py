@@ -130,7 +130,7 @@ class SQLiteAnalysisTests(unittest.TestCase):
         self.assertEqual(len(self.store.list_offers()), 1)
 
     def test_stale_data_cannot_raise_alert(self) -> None:
-        for n in range(12, 0, -1):
+        for n in range(14, 2, -1):
             self.store.persist(make_quote(when=self.now-timedelta(days=n), cents=10000))
         q = make_quote(when=self.now-timedelta(days=2), cents=8000)
         self.store.persist(q)
