@@ -33,6 +33,7 @@ def parse_shopping_results(payload: dict[str, Any], observed_at: datetime,
     if not isinstance(results, list):
         raise ProviderUnavailable("Shopping results must be an array")
     accepted: list[ProviderOffer] = []
+    seen_offer_ids: set[str] = set()
     for item in results[: min(20, max(limit * 4, limit))]:
         if not isinstance(item, dict):
             continue
@@ -72,6 +73,9 @@ def parse_shopping_results(payload: dict[str, Any], observed_at: datetime,
             )
         except (KeyError, ValueError, TypeError, OverflowError):
             continue
+        if quote.offer_id in seen_offer_ids:
+            continue
+        seen_offer_ids.add(quote.offer_id)
         accepted.append(quote)
         if len(accepted) >= limit:
             break
