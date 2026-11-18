@@ -33,3 +33,67 @@ Real provider observations are **provider-reported, not independently verified r
 ## Scope boundary
 
 No Groq live call, retailer scraping, unattended scheduling, account registration, alert delivery or public deployment is claimed in loops 1–10. Those need later loops and live-provider credentials. The existing fictional Intelligence Studio remains clearly separate until a replacement frontend is ready.
+
+## Implemented Phase 1 checkpoint commands
+
+Install the backend and developer dependencies from the repository root:
+
+```bash
+python -m pip install -r backend/requirements-dev.txt
+python -m unittest discover -s backend/tests -p 'test_verified_pipeline.py' -v
+```
+
+For real provider search, configure a **new** `SERPAPI_KEY` privately as a Codespaces secret or in the ignored root `.env` (do not commit this file):
+
+```bash
+python real_price_agent.py --query "laptop" --budget 60000 --currency INR --db tracker.sqlite3
+```
+
+Read persisted offers without contacting SerpApi:
+
+```bash
+python real_price_agent.py --list --db tracker.sqlite3
+python real_price_agent.py --offer-id YOUR_ACTUAL_64_CHARACTER_OFFER_ID --budget 60000 --currency INR --db tracker.sqlite3
+```
+
+The first command requires a real provider key and authorized SerpApi plan. `--explain` is optional and additionally requires a private Groq API key. The default decision is deterministic Python, not model output. No network calls are made for offline reports.
+
+## Concrete checkpoint files
+
+- `backend/price_engine/verified/money.py` — exact INR/USD minor units and explicit currency enforcement.
+- `backend/price_engine/verified/types.py` — validated offer identity, safe display-only URL and evidence hashes.
+- `backend/price_engine/verified/provider.py` — SerpApi-only fixed-endpoint adapter; no synthetic fallback.
+- `backend/migrations/003_verified_offers.sql` — additive, append-only provenance-aware schema.
+- `backend/price_engine/verified/store.py` — event-idempotent transactional ingestion.
+- `backend/price_engine/verified/analysis.py` — 30-day unique-day windows, exact rule checks and all-time low.
+- `backend/price_engine/verified/tool_agent.py` — strictly read-only SQLite tools for optional Groq explanations.
+- `backend/price_engine/verified/cli.py`, `real_price_agent.py` — new real-data CLI.
+- `backend/tests/test_verified_pipeline.py` — offline provider and database regression tests.
+- `.github/workflows/verified-phase1.yml` — Phase 1 CI checks.
+
+## Completion criteria and incomplete scope
+
+| Goal | Phase 1 checkpoint status |
+| --- | --- |
+| No fake price ingestion | Implemented in new provider pipeline; original demo paths are unchanged and isolated |
+| Explicit INR/USD monetary units | Implemented in new provider pipeline |
+| Source attribution and immutable observations | Implemented; provenance is **provider-reported** |
+| SQLite history windows and all-time low | Implemented for new provider tables |
+| Groq tool calls querying stored data | Implemented as optional read-only explanation layer; live call not verified |
+| Live product offer verification | Not independently verified; provider-reported only |
+| Automatic scheduling, retailer URL crawling, and alerts | Not implemented in Phase 1 |
+| New UI replacing the Intelligence Studio | Not implemented; fictional Studio remains segregated |
+| Multi-user authentication and public hosting | Not implemented; do not expose unauthenticated local dashboard publicly |
+
+## Loop changelog
+
+1. Captured baseline architecture and non-regression constraints.
+2. Added exact INR/USD price normalization.
+3. Added strict provider and identity datatypes.
+4. Added fixed-host SerpApi adapter without demo fallback.
+5. Added backwards-compatible SQLite offer/history migration.
+6. Added atomic, idempotent ingestion.
+7. Added historical deal calculation that fails closed on missing evidence.
+8. Added read-only, budget-locked SQLite tools for Groq explanations.
+9. Added real-provider CLI and existing-record analysis.
+10. Added offline regression tests, GitHub Actions and updated documentation.
