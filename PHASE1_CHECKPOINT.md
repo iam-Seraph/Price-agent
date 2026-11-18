@@ -49,11 +49,10 @@ For real provider search, configure a **new** `SERPAPI_KEY` privately as a Codes
 python real_price_agent.py --query "laptop" --budget 60000 --currency INR --db tracker.sqlite3
 ```
 
-Read persisted offers without contacting SerpApi:
+Read persisted offers without contacting SerpApi (copy a real offer ID from this result to analyze it with `--offer-id`):
 
 ```bash
 python real_price_agent.py --list --db tracker.sqlite3
-python real_price_agent.py --offer-id YOUR_ACTUAL_64_CHARACTER_OFFER_ID --budget 60000 --currency INR --db tracker.sqlite3
 ```
 
 The first command requires a real provider key and authorized SerpApi plan. `--explain` is optional and additionally requires a private Groq API key. The default decision is deterministic Python, not model output. No network calls are made for offline reports.
