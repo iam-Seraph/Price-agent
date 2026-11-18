@@ -91,6 +91,51 @@ class ProviderIntegrationTests(unittest.TestCase):
         self.assertEqual(result[0].source_product_id, "b")
 
 
+    def test_deduplicates_provider_offers(self) -> None:
+        item = {"source": "Store", "title": "Headphones", "product_id": "p1",
+                "link": "https://shop.example.com/p1", "price": "₹1,000"}
+        quoted = parse_shopping_results({"shopping_results": [item, item]}, datetime.now(timezone.utc))
+        self.assertEqual(len(quoted), 1)
+
+    def test_rejects_missing_real_merchant_identity(self) -> None:
+        item = {"source": None, "title": "Headphones", "product_id": "p1",
+                "link": "https://shop.example.com/p1", "price": "₹1,000"}
+        quoted = parse_shopping_results({"shopping_results": [item]}, datetime.now(timezone.utc))
+        self.assertEqual(quoted, [])
+
+    def test_transient_retry_is_bounded(self) -> None:
+        requests = []
+        sleeps = []
+        def response(request: httpx.Request) -> httpx.Response:
+            requests.append(request)
+            if len(requests) < 3:
+                return httpx.Response(503)
+            return httpx.Response(200, json={"shopping_results": []})
+        result = search_serpapi("headphones", api_key="test-key",
+                                transport=httpx.MockTransport(response),
+                                retries=2, sleeper=sleeps.append)
+        self.assertEqual(result, [])
+        self.assertEqual(len(requests), 3)
+        self.assertEqual(sleeps, [0.25, 0.5])
+
+    def test_access_denial_is_never_retried(self) -> None:
+        requests = []
+        def response(request: httpx.Request) -> httpx.Response:
+            requests.append(request)
+            return httpx.Response(429)
+        with self.assertRaises(ProviderUnavailable):
+            search_serpapi("headphones", api_key="test-key",
+                           transport=httpx.MockTransport(response),
+                           retries=3, sleeper=lambda seconds: None)
+        self.assertEqual(len(requests), 1)
+
+    def test_malformed_provider_price_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            provider_price("₹1,000 per month", None)
+        with self.assertRaises(ValueError):
+            provider_price("$19.99 USD", None)
+
+
 class SQLiteAnalysisTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()

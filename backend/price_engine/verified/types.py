@@ -18,12 +18,17 @@ _ID = re.compile(r"[A-Za-z0-9._:/+-]{1,200}\Z")
 
 def safe_evidence_url(value: str) -> str:
     """Validate display-only URLs; never use this field for HTTP fetching."""
-    if not isinstance(value, str) or not 1 <= len(value) <= 2048:
+    if (not isinstance(value, str) or not 1 <= len(value) <= 2048
+            or any(ord(char) < 32 or ord(char) == 127 for char in value)):
         raise ValueError("Invalid evidence URL")
-    parts = urlsplit(value)
+    try:
+        parts = urlsplit(value)
+        port = parts.port
+    except ValueError as exc:
+        raise ValueError("Malformed evidence URL") from exc
     host = (parts.hostname or "").lower().rstrip(".")
     if (parts.scheme != "https" or not host or parts.username or parts.password
-            or parts.port not in (None, 443) or host == "localhost"
+            or port not in (None, 443) or host == "localhost"
             or host.endswith(".localhost") or host.endswith(".local")):
         raise ValueError("Only public HTTPS product links are accepted")
     try:

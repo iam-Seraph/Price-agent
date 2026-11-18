@@ -48,15 +48,12 @@ def provider_price(label: str, extracted: object) -> tuple[int, str]:
     """Require a provider price label with an *explicit* monetary currency."""
     if not isinstance(label, str) or len(label) > 80:
         raise ValueError("Provider price label missing or too long")
-    value = label.strip()
-    matches = [(currency, marker) for currency, markers in _CURRENCY_MARKERS.items()
-               for marker in markers if marker.lower() in value.lower()]
-    currencies = {currency for currency, _ in matches}
-    if len(currencies) != 1:
-        raise ValueError("Ambiguous or missing currency")
-    currency = currencies.pop()
-    for _, marker in matches:
-        value = re.sub(re.escape(marker), "", value, flags=re.IGNORECASE).strip()
+    match = re.fullmatch(r"\s*(₹|INR|\$|USD)\s*([0-9][0-9,.]*)\s*", label, flags=re.IGNORECASE)
+    if not match:
+        raise ValueError("Provider price must specify one unambiguous leading currency")
+    symbol = match.group(1).upper()
+    currency = "INR" if symbol in {"₹", "INR"} else "USD"
+    value = match.group(2)
     cents = minor_units(value, currency)
     if extracted is not None:
         if isinstance(extracted, bool) or not isinstance(extracted, (int, float, str, Decimal)):
