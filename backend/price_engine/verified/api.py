@@ -2,15 +2,28 @@
 from __future__ import annotations
 
 from pathlib import Path
+from threading import Lock
+from time import monotonic
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field
+
+from .money import minor_units
+from .provider import ProviderUnavailable, search_serpapi
 
 from .analysis import analyze_offer
 from .store import VerifiedPriceStore
 from .watch_store import WatchStore
+
+class VerifiedSearchRequest(BaseModel):
+    query: str = Field(min_length=2, max_length=120)
+    budget: str = Field(min_length=1, max_length=30)
+    currency: Literal["INR", "USD"] = "INR"
+    limit: int = Field(default=5, ge=1, le=5)
+
 
 TEMPLATES = Jinja2Templates(
     directory=str(Path(__file__).resolve().parents[1] / "templates"))
@@ -19,11 +32,40 @@ TEMPLATES = Jinja2Templates(
 def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
     """Install read-only endpoints; no retailer fetch is triggered by a GET."""
     store = VerifiedPriceStore(db_path)
+    search_lock = Lock()
+    last_search = [0.0]
     watches = WatchStore(db_path)
 
     @app.get("/verified", response_class=HTMLResponse)
     def verified_page(request: Request):
         return TEMPLATES.TemplateResponse(request, "verified.html", {})
+
+    @app.post("/api/verified/search")
+    def verified_search(body: VerifiedSearchRequest):
+        """Explicitly initiated real-provider search; no synthetic fallback."""
+        try:
+            minor_units(body.budget, body.currency)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        with search_lock:
+            now = monotonic()
+            if last_search[0] and now - last_search[0] < 15:
+                raise HTTPException(status_code=429, detail="Wait before the next provider search")
+            last_search[0] = now
+        try:
+            offers = search_serpapi(body.query, limit=body.limit)
+        except ProviderUnavailable as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        analyses = []
+        inserted = 0
+        for offer in offers:
+            if offer.currency != body.currency:
+                continue
+            inserted += int(store.persist(offer))
+            analyses.append(analyze_offer(store, offer.offer_id, body.budget))
+        return {"provider": "SERPAPI_GOOGLE_SHOPPING",
+                "provenance": "PROVIDER_REPORTED", "inserted": inserted,
+                "analyses": analyses}
 
     @app.get("/api/verified/status")
     def verified_status():
