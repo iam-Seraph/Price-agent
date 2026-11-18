@@ -8,6 +8,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from openai import OpenAIError
+
 from .analysis import analyze_offer
 from .store import VerifiedPriceStore
 
@@ -93,6 +95,12 @@ def run_groq_react(store: VerifiedPriceStore, offer_id: str, budget: str | int,
                     "ai_explanation_only": True,
                 }
             break
+    except OpenAIError:
+        return {
+            "decision": authoritative["decision"], "reasoning": "Groq API unavailable",
+            "authoritative_checks": authoritative["checks"], "model": model,
+            "ai_explanation_only": True, "error": "Provider call failed",
+        }
     except (ValueError, TypeError, AttributeError, IndexError) as exc:
         return {
             "decision": authoritative["decision"], "reasoning": "AI explanation unavailable",
