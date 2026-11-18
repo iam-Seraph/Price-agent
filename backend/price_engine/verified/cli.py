@@ -55,6 +55,11 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps({"status": "NO_MATCHING_CURRENCY", "stored": 0}))
                 return 3
         else:
+            selected = store.offer(args.offer_id)
+            if selected is None:
+                raise ValueError("Offer not found in local price history")
+            if selected["currency"] != validate_currency(args.currency):
+                raise ValueError("Budget currency does not match stored offer currency")
             ids = [args.offer_id]
             stored = 0
         reports = [analyze_offer(store, offer_id, args.budget) for offer_id in dict.fromkeys(ids)]
