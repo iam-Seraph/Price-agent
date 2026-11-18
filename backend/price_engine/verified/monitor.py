@@ -6,20 +6,22 @@ from datetime import datetime, timezone
 from typing import Any
 
 from .provider import ProviderUnavailable, search_serpapi
+from .alert_store import AlertStore
 from .types import ProviderOffer
 from .watch_store import WatchStore, watch_time
 
 
 def run_due_once(store: WatchStore, *, now: datetime | None = None,
                  limit: int = 1,
-                 search: Callable[..., list[ProviderOffer]] = search_serpapi
+                 search: Callable[..., list[ProviderOffer]] = search_serpapi,
+                 alerts: AlertStore | None = None
                  ) -> list[dict[str, Any]]:
     """Process short leased batches and retain only real, source-backed offers."""
     claimed = store.claim_due(now=now, limit=limit)
     results = []
     for watch in claimed:
         watch["started_at"] = watch_time(now or datetime.now(timezone.utc))
-        inspected = inserted = 0
+        inspected = inserted = queued = 0
         status = "ERROR"
         message = ""
         try:
@@ -33,6 +35,8 @@ def run_due_once(store: WatchStore, *, now: datetime | None = None,
                     continue
                 matching += 1
                 inserted += int(store.prices.persist(offer))
+                if alerts is not None:
+                    queued += alerts.enqueue_if_qualified(str(watch["watch_id"]), offer.offer_id)
             status = "OK" if matching else "NO_MATCHES"
         except ProviderUnavailable:
             status = "PROVIDER_UNAVAILABLE"
@@ -47,6 +51,7 @@ def run_due_once(store: WatchStore, *, now: datetime | None = None,
         results.append({
             "watch_id": str(watch["watch_id"]), "status": status,
             "offers_inspected": inspected, "inserted_observations": inserted,
+            "queued_alerts": queued,
             "provenance": "PROVIDER_REPORTED",
         })
     return results
