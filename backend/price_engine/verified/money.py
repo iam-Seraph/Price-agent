@@ -48,7 +48,7 @@ def provider_price(label: str, extracted: object) -> tuple[int, str]:
     """Require a provider price label with an *explicit* monetary currency."""
     if not isinstance(label, str) or len(label) > 80:
         raise ValueError("Provider price label missing or too long")
-    match = re.fullmatch(r"\\s*(₹|INR|\\$|USD)\\s*([0-9][0-9,.]*)\\s*", label, flags=re.IGNORECASE)
+    match = re.fullmatch(r"\s*(₹|INR|\$|USD)\s*([0-9][0-9,.]*)\s*", label, flags=re.IGNORECASE)
     if not match:
         raise ValueError("Provider price must specify one unambiguous leading currency")
     symbol = match.group(1).upper()
