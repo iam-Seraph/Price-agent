@@ -116,40 +116,44 @@ The bounded, jittered `PollingScheduler` is opt-in. A live retailer ingestion pi
 
 ## Verify locally
 
-```powershell
-# From repository root
+~~~powershell
+# From the repository root:
 python -m pip install -r backend/requirements-dev.txt
 cd backend
 python -m unittest discover -s tests -v
 python -m pytest -q tests
+python -m compileall -q price_engine tests
 python -m mypy --strict price_engine
 python -m benchmarks.loopback
-```
+~~~
 
-**Previously observed release evidence:** 34 backend tests passed with unittest/pytest; Python compilation and whitespace checks passed. These are **historical local results**, not newly verified GitHub CI. Strict mypy and Hypothesis property testing were **not run** in that environment; performance non-regression was not proven. The benchmark uses localhost synthetic latency/errors, not retailer traffic. See [AUDIT.md](AUDIT.md) for the exact evidence and limitations.
+**Verified CI for Phase 5 PR #3:** 37 backend `unittest` tests passed on Python 3.11, plus Python compilation ([workflow run](https://github.com/iam-Seraph/Price-agent/actions/runs/44166599779)). Tests exercise small offline fixtures, **not** a million-row bulk import, real retailer pricing or production-scale query latency. Earlier Phase 2–4 release evidence recorded **34 offline backend tests**. Strict mypy and Hypothesis remain **unverified**, and localhost benchmarks are not production performance guarantees.
 
 ## Repository map
 
-```text
+~~~text
 Price-agent/
-├── README.md                  # Unified quick start and project status
-├── AUDIT.md                   # Detailed findings, evidence and release history
-├── .env.example               # Placeholders, never real API keys
-├── .gitignore
-├── requirements.txt
-├── price_agent.py             # Root mock-data ReAct workflow
-├── live_price.py              # Standalone URL extractor
-├── price_history.json         # Reference fixture, not SQLite history
+├── README.md                         # Current status and quick start
+├── PHASE5.md                         # Real-data import, license and caveats
+├── AUDIT.md                          # Original audit and release evidence
+├── .github/workflows/phase5.yml      # Backend CI on pull requests
+├── .env.example                      # Example credentials only
+├── price_agent.py                    # Separate mock USD ReAct agent
+├── live_price.py                     # Separate best-effort URL extractor
 └── backend/
-    ├── README.md              # Detailed architecture and API
-    ├── migrations/001_initial.sql
-    ├── config/selectors.json  # Integrations disabled by default
+    ├── README.md                     # Backend and API runbook
+    ├── migrations/001_initial.sql    # Append-only price history
+    ├── migrations/002_catalog.sql    # Catalog + FTS5 indexes
+    ├── price_engine/catalog_import.py
+    ├── price_engine/catalog_api.py
+    ├── price_engine/dashboard.py
+    ├── price_engine/templates/       # Overview + catalog pages
+    ├── price_engine/static/          # Local JavaScript/CSS
     ├── requirements-dashboard.txt
     ├── requirements-dev.txt
-    ├── price_engine/          # Router, adapters, SQLite, dashboard
     ├── benchmarks/loopback.py
-    └── tests/
-```
+    └── tests/test_catalog.py         # Phase 5 fixture-based tests
+~~~
 
 ## Security and remaining work
 
