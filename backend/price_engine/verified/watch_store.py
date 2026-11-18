@@ -100,3 +100,47 @@ class WatchStore:
                     """, (item["lease_owner"],expires,item["watch_id"]))
                     claimed.append(item)
                 return claimed
+
+
+    def complete_claim(self, watch: dict[str, object], *, status: str,
+                       offers_inspected: int, inserted_observations: int,
+                       message: str = "", now: datetime | None = None) -> None:
+        """Release a lease and record one sanitized monitoring attempt."""
+        if status not in {"OK", "NO_MATCHES", "PROVIDER_UNAVAILABLE", "ERROR"}:
+            raise ValueError("Invalid monitor status")
+        if (type(offers_inspected) is not int or offers_inspected < 0
+                or type(inserted_observations) is not int or inserted_observations < 0
+                or inserted_observations > offers_inspected):
+            raise ValueError("Invalid monitor counters")
+        if not isinstance(message, str) or len(message) > 120:
+            raise ValueError("Monitor audit message is too long")
+        clock = now or datetime.now(timezone.utc)
+        at = watch_time(clock)
+        watch_id = str(watch.get("watch_id", ""))
+        lease_owner = str(watch.get("lease_owner", ""))
+        with self.prices.connect() as db:
+            with db:
+                db.execute("BEGIN IMMEDIATE")
+                row = db.execute("""
+                    SELECT interval_seconds,lease_owner,created_at
+                    FROM verified_watch_queries WHERE watch_id=?
+                """, (watch_id,)).fetchone()
+                if row is None or row["lease_owner"] != lease_owner or not lease_owner:
+                    raise ValueError("Watch lease expired or belongs to another worker")
+                interval = int(row["interval_seconds"])
+                if status in {"PROVIDER_UNAVAILABLE", "ERROR"}:
+                    interval = max(interval, 3600)
+                due = watch_time(clock + timedelta(seconds=interval))
+                db.execute("""
+                    UPDATE verified_watch_queries SET
+                      last_checked_at=?,last_status=?,next_due_at=?,
+                      lease_owner=NULL,lease_expires_at=NULL
+                    WHERE watch_id=?
+                """, (at,status,due,watch_id))
+                db.execute("""
+                    INSERT INTO verified_watch_runs
+                    (run_id,watch_id,started_at,completed_at,status,
+                     offers_inspected,inserted_observations,message)
+                    VALUES(?,?,?,?,?,?,?,?)
+                """, (uuid4().hex,watch_id,str(watch.get("started_at",at)),
+                      at,status,offers_inspected,inserted_observations,message))
