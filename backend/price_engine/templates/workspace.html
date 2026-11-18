@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Local datasets and agent product research">
+  <title>Data Workspace — Price Signal</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+  <link rel="stylesheet" href="/static/workspace.css">
+  <script src="/static/workspace.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">P<span>.</span></span><span>PRICE<span class="brand-light">SIGNAL</span><small>AGENT CONSOLE</small></span></div>
+      <div class="nav-head">WORKSPACE</div>
+      <nav aria-label="Primary navigation">
+        <a href="/">▦ <span>Overview</span></a>
+        <a href="/catalog">▤ <span>Real product catalog</span></a>
+        <a class="nav-active" href="/workspace">▥ <span>Data &amp; Agent</span></a>
+      </nav>
+      <div class="sidebar-footer"><span class="pulse-dot"></span>Local dataset workspace<small>Demo · Upload · Research</small></div>
+    </aside>
+    <main>
+      <header class="topbar"><div class="eyebrow">INTELLIGENCE / DATA WORKSPACE</div><div class="topbar-right"><span id="synced" aria-live="polite">Connecting…</span><span class="avatar">PA</span></div></header>
+      <div class="content">
+        <div class="heading"><div><div class="eyebrow accent">PRODUCT INTELLIGENCE</div><h1>Control your <em>data source.</em></h1><p>Test with built-in products, upload your own, or research product offers.</p></div></div>
+        <section class="metrics" aria-label="Dataset statistics">
+          <article class="metric"><span>ACTIVE SOURCE</span><strong class="metric-label" id="active-source">—</strong><small>One dataset at a time</small></article>
+          <article class="metric"><span>ACTIVE PRODUCTS</span><strong id="active-count">—</strong><small>Normalized INR product rows</small></article>
+          <article class="metric"><span>DEMO PRODUCTS</span><strong id="demo-count">—</strong><small>Bundled synthetic records</small></article>
+          <article class="metric"><span>UPLOADED PRODUCTS</span><strong id="upload-count">—</strong><small>Stored locally, separate from history</small></article>
+        </section>
+        <section class="workspace-grid" aria-label="Dataset controls">
+          <div class="panel workspace-card"><div class="panel-heading"><div><h2>Built-in demo</h2><p>Ready immediately. No download or external service required.</p></div></div>
+            <div class="workspace-card-body"><button id="load-demo" type="button" class="refresh">Load Demo Data</button><p class="muted">Loads fictional electronics with realistic INR prices, specs, ratings and availability.</p></div>
+          </div>
+          <div class="panel workspace-card"><div class="panel-heading"><div><h2>Upload your dataset</h2><p>CSV, JSON or Excel (.xlsx). Max 2 MB / 1,000 rows.</p></div></div>
+            <form id="upload-form" class="workspace-card-body"><label for="dataset-file">Choose a product dataset</label><input type="file" id="dataset-file" accept=".csv,.json,.xlsx" required><button class="refresh" type="submit">Upload &amp; Activate</button></form>
+          </div>
+        </section>
+        <div class="source-bar"><span>Switch active dataset:</span><button id="use-demo" type="button" class="refresh">Demo</button><button id="use-upload" type="button" class="refresh">Uploaded</button><span id="workspace-message" role="status" aria-live="polite"></span></div>
+        <section class="panel" aria-labelledby="dataset-heading">
+          <div class="panel-heading"><div><h2 id="dataset-heading">Active dataset</h2><p id="provenance">Dataset records are local data, not verified retailer observations.</p></div><div class="panel-tools"><input type="search" id="dataset-query" placeholder="Search products or retailers" aria-label="Search active dataset"></div></div>
+          <div class="table-scroll"><table><thead><tr><th>PRODUCT</th><th>RETAILER</th><th>PRICE (INR)</th><th>AVAILABILITY</th><th>RATING</th></tr></thead><tbody id="dataset-results"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table></div>
+          <div class="panel-foot"><span id="dataset-count">—</span><div class="workspace-pager"><button id="dataset-prev" type="button" class="refresh" disabled>Previous</button><button id="dataset-next" type="button" class="refresh" disabled>Next</button></div></div>
+        </section>
+        <section class="panel lookup-panel" aria-labelledby="lookup-heading">
+          <div class="panel-heading"><div><h2 id="lookup-heading">Agent product research</h2><p>SerpApi Google Shopping when configured; otherwise DummyJSON samples or offline demo.</p></div></div>
+          <form id="lookup-form" class="lookup-form"><label for="lookup-query">Search for a product</label><div class="lookup-row"><input id="lookup-query" type="search" minlength="2" maxlength="120" placeholder="e.g. wireless headphones" required><button id="lookup-button" type="submit" class="refresh">Look up product</button></div></form>
+          <div class="lookup-summary" id="lookup-summary" role="status" aria-live="polite">No lookup performed yet.</div>
+          <div class="table-scroll"><table><thead><tr><th>PRODUCT</th><th>PROVIDER / SELLER</th><th>PRICE</th><th>STOCK</th><th>RATING / REVIEWS</th></tr></thead><tbody id="lookup-results"><tr><td colspan="5" class="empty">Search to view results.</td></tr></tbody></table></div>
+          <div class="panel-foot"><span id="lookup-foot">Results are research only; no deal alerts or history writes.</span></div>
+        </section>
+        <p class="catalog-credit">Uploaded prices are user-provided. DummyJSON and offline demo values are samples. Google Shopping results are provider-reported and may be delayed. Never mix currencies or treat an offer as a verified 30-day deal.</p>
+        <footer>PRICE SIGNAL <span>·</span> Local-only development workspace <span>·</span> Existing price history remains read-only</footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

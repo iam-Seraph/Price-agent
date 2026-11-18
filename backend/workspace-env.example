@@ -1,0 +1,4 @@
+# Add this to the existing repository-root .env file.
+# No key is required for DummyJSON sample data and the offline demo fallback.
+# Optional: live Google Shopping via SerpApi (usage/charges depend on your plan).
+SERPAPI_KEY=

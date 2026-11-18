@@ -1,0 +1,10 @@
+[
+  {"name":"Aster Wave Wireless Headphones","price":2499.00,"currency":"INR","retailer":"Demo Electronics","availability":"IN_STOCK","rating":4.4,"review_count":218,"specs":{"connection":"Bluetooth 5.3","battery":"35 hours","warranty":"1 year"}},
+  {"name":"Northstar 27-inch QHD Monitor","price":16999.00,"currency":"INR","retailer":"Demo Electronics","availability":"IN_STOCK","rating":4.6,"review_count":94,"specs":{"resolution":"2560x1440","refresh_rate":"100 Hz","panel":"IPS"}},
+  {"name":"Nimbus Mechanical Keyboard","price":4299.00,"currency":"INR","retailer":"Demo Gear","availability":"IN_STOCK","rating":4.2,"review_count":176,"specs":{"layout":"TKL","switches":"Tactile","connection":"USB-C"}},
+  {"name":"Orbit USB-C Hub 7-in-1","price":1899.00,"currency":"INR","retailer":"Demo Gear","availability":"OUT_OF_STOCK","rating":4.1,"review_count":62,"specs":{"ports":"HDMI, USB-A, USB-C, SD","power_delivery":"100 W pass-through"}},
+  {"name":"Vector Portable SSD 1TB","price":7499.00,"currency":"INR","retailer":"Demo Storage","availability":"IN_STOCK","rating":4.7,"review_count":321,"specs":{"capacity":"1 TB","interface":"USB 3.2 Gen 2","speed":"up to 1050 MB/s"}},
+  {"name":"PixelPeak 1080p Webcam","price":3199.00,"currency":"INR","retailer":"Demo Gear","availability":"IN_STOCK","rating":4.0,"review_count":89,"specs":{"resolution":"1080p","frame_rate":"30 fps","microphone":"built-in"}},
+  {"name":"Solis 20000mAh Power Bank","price":2799.00,"currency":"INR","retailer":"Demo Mobile","availability":"IN_STOCK","rating":4.3,"review_count":144,"specs":{"capacity":"20000 mAh","output":"22.5 W","ports":"USB-C, USB-A"}},
+  {"name":"Lumen Smart Desk Lamp","price":1599.00,"currency":"INR","retailer":"Demo Home","availability":"UNKNOWN","rating":4.5,"review_count":73,"specs":{"color_temperature":"adjustable","power":"10 W","dimming":"yes"}}
+]

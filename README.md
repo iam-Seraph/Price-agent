@@ -178,6 +178,22 @@ Price-agent/
 
 All three are merged into `main`. The Phase 5 release provides **import capability**, not a preloaded million-item dataset or real retailer-price feed.
 
+## Local dataset and research workspace (optional)
+
+The opt-in workspace extends the existing FastAPI dashboard without writing to the append-only price history. It preloads 8 **synthetic** sample electronics, accepts validated CSV/JSON/XLSX product datasets (INR rupees, 2 MiB, up to 1,000 records), and switches between demo and uploaded rows persisted in a **separate** SQLite database. Rows can be paged and searched from `/workspace`.
+
+Run from the repository root (Python 3.11+):
+
+```powershell
+python -m pip install -r backend/requirements-workspace.txt
+cd backend
+python -m price_engine.workspace --db demo_fresh.sqlite3 --workspace-db workspace.sqlite3 --host 127.0.0.1 --port 8000
+```
+
+**Do not re-run** the legacy demo ingestion against the same history database if its fixture record is already present. The workspace demo button operates only on `workspace.sqlite3`.
+
+Product lookup uses **SerpApi Google Shopping** when the untracked root `.env` contains a `SERPAPI_KEY`; otherwise it uses DummyJSON sample products or an offline bundled demo. Only SerpApi responses are provider-reported shopping offers, and none are guaranteed live or verified. The root ReAct agent can optionally register the read-only research tool via `price_agent_workspace.py`; existing USD deal checks remain separate from INR datasets and provider results. No research result writes to the certified price history. The workspace is local-only and unauthenticated. See [README_UPGRADE.md](README_UPGRADE.md) for schema, risks, and commands.
+
 ## Project website and source backup
 
 The responsive, dependency-free project website lives in [`site/`](site/README.md).

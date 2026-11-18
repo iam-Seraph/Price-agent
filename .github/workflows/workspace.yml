@@ -1,0 +1,30 @@
+name: Workspace regression tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "price_agent_workspace.py"
+      - ".github/workflows/workspace.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "price_agent_workspace.py"
+      - ".github/workflows/workspace.yml"
+jobs:
+  offline-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install full workspace test requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements-workspace.txt -r backend/requirements-dev.txt
+      - name: Run original and workspace regression suites
+        working-directory: backend
+        run: python -m pytest -q tests
+      - name: Compile Python sources
+        run: python -m compileall -q price_agent.py price_agent_workspace.py backend/price_engine backend/tests
