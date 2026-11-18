@@ -87,9 +87,14 @@ class VerifiedPriceStore:
         with self.connect() as db:
             return [dict(row) for row in db.execute("""
                 SELECT o.offer_id,o.merchant,o.title,o.currency,o.product_url,
-                       MAX(p.observed_at) AS last_observed_at
+                       p.observed_at AS last_observed_at,
+                       p.price_minor AS latest_price_minor, p.stock,
+                       p.seller_rating, p.provenance
                 FROM verified_offers o JOIN verified_offer_observations p
-                  ON p.offer_id=o.offer_id
-                GROUP BY o.offer_id
-                ORDER BY last_observed_at DESC LIMIT ?
+                  ON p.event_id = (
+                     SELECT p2.event_id FROM verified_offer_observations p2
+                     WHERE p2.offer_id=o.offer_id
+                     ORDER BY p2.observed_at DESC,p2.event_id DESC LIMIT 1
+                  )
+                ORDER BY p.observed_at DESC,o.offer_id LIMIT ?
             """, (limit,)).fetchall()]
