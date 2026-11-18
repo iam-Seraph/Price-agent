@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from .product_lookup import lookup_product
 from .workspace_data import MAX_UPLOAD_BYTES, WorkspaceStore, parse_upload
+from .verified.api import register_verified_routes
 
 _PACKAGE = Path(__file__).resolve().parent
 _TEMPLATES = Jinja2Templates(directory=str(_PACKAGE / "templates"))
@@ -104,6 +105,7 @@ def create_app(history_db: str | Path, workspace_db: str | Path = "workspace.sql
         raise ValueError("Workspace database must differ from the history database")
     app = existing_dashboard(history_db)
     register_workspace_routes(app, workspace_db)
+    register_verified_routes(app, history_db)
     return app
 
 
