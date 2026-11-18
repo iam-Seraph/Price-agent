@@ -1,6 +1,6 @@
-# Price-Checker & Deal Tracker Agent
+# Price Agent — Experimental Deal Analysis and Product Catalog
 
-Python learning project with three **separate** workflows: mock-data ReAct AI, a standalone live URL price checker, and a hardened SQLite backend with a local read-only dashboard.
+Python learning project with **four separate workflows**: mock-data ReAct AI, a standalone live URL price checker, a hardened SQLite price-history dashboard, and a searchable catalog of **real food/grocery products** from Open Food Facts.
 
 > **Status (18 November 2026):** Phases 2–5 are merged into `main`. Phase 5 can import up to **1,000,000 accepted Open Food Facts source rows**, but no million-product dataset is bundled or verified imported. **No automatic retailer tracking or AI-to-catalog integration.** Not production-ready. See [PHASE5.md](PHASE5.md) and [AUDIT.md](AUDIT.md).
 
@@ -79,7 +79,7 @@ python -m price_engine.catalog_import --input data/openfoodfacts.csv.gz --db dem
 
 Use the **same SQLite filename** for the import and the dashboard. The importer accepts real product identities and metadata from Open Food Facts, **not price quotes**. `--max-rows` limits accepted input rows, not guaranteed distinct stored products. Duplicates, invalid records, and category exclusions can reduce the final count. View `/api/catalog/stats` to verify the actual count. The export is not bundled or fetched by CI; no million-product import or benchmark has been confirmed.
 
-The source is attributed to **Open Food Facts contributors** and subject to **ODbL** obligations. See [PHASE5.md](PHASE5.md) for source/license information, accepted formats, filtering, and troubleshooting.
+**Catalog scope:** Open Food Facts mainly covers food and grocery items, **not a general electronics/phone catalog**. The source is attributed to **Open Food Facts contributors** and subject to **ODbL** obligations. See [PHASE5.md](PHASE5.md) for source/license information, accepted formats, filtering, and troubleshooting.
 
 ## Run the root mock-data ReAct agent
 
