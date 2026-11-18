@@ -15,6 +15,7 @@ from .money import minor_units
 from .provider import ProviderUnavailable, search_serpapi
 
 from .analysis import analyze_offer
+from .alert_store import AlertStore
 from .store import VerifiedPriceStore
 from .watch_store import WatchStore
 
@@ -32,6 +33,13 @@ class WatchCreateRequest(BaseModel):
     interval_minutes: int = Field(default=60, ge=15, le=1440)
 
 
+class AlertChannelRequest(BaseModel):
+    watch_id: str = Field(min_length=32, max_length=32)
+    channel: Literal["EMAIL", "TELEGRAM"]
+    enabled: bool
+    confirmed: bool
+
+
 TEMPLATES = Jinja2Templates(
     directory=str(Path(__file__).resolve().parents[1] / "templates"))
 
@@ -42,6 +50,7 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
     search_lock = Lock()
     last_search = [0.0]
     watches = WatchStore(db_path)
+    alerts = AlertStore(db_path)
 
     @app.get("/verified", response_class=HTMLResponse)
     def verified_page(request: Request):
@@ -102,6 +111,18 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
     @app.get("/api/verified/watches")
     def list_verified_watches(limit: int = Query(100, ge=1, le=200)):
         return {"watches": watches.list_watches(limit)}
+
+    @app.post("/api/verified/alerts/channel")
+    def configure_verified_alert_channel(body: AlertChannelRequest):
+        if not body.confirmed:
+            raise HTTPException(status_code=422, detail="Explicit confirmation required")
+        try:
+            rule_id = alerts.set_channel(body.watch_id, body.channel,
+                                         enabled=body.enabled)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        return {"rule_id": rule_id, "enabled": body.enabled,
+                "delivery_started": False}
 
     @app.get("/api/verified/watch-runs")
     def verified_watch_audit(limit: int = Query(30, ge=1, le=100)):
