@@ -28,3 +28,12 @@ jobs:
         run: python -m pytest -q tests
       - name: Compile Python sources
         run: python -m compileall -q price_agent.py price_agent_workspace.py backend/price_engine backend/tests
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check JavaScript syntax
+        run: |
+          node --check backend/price_engine/static/intelligence.js
+          node --check backend/price_engine/static/intelligence.worker.js
+      - name: Test virtual product generator and search
+        run: node --test backend/tests/test_intelligence_worker.cjs

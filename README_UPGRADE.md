@@ -86,3 +86,7 @@ Tests were run on this overlay independently. The entire original repository's t
 ### Security and provenance
 
 Only run on localhost (`127.0.0.1`). Host-header validation helps prevent DNS-rebinding access and cross-origin browser writes are rejected. Uploaded datasets are not authenticated or safe for public hosting. Product lookups only contact fixed API hosts; provider data is unverified research, not approved price history. Uploaded files have a 2 MiB cap, 1,000 accepted product row cap, and bounded column/scan limits. No keys or uploaded datasets are checked into source control.
+
+## Intelligence Studio extension (November 2026)
+
+An additional `/intelligence` page is now available **when starting the same `python -m price_engine.workspace` server**. It keeps all previous upload/lookup endpoints intact and adds an entirely local virtual catalog and comparison interface. No SerpApi key is needed for its fictitious products. Read [INTELLIGENCE_STUDIO.md](INTELLIGENCE_STUDIO.md) for architecture, data simulation limits, usage, tests and security details.

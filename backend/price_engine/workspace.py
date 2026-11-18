@@ -49,6 +49,11 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
     def workspace_page(request: Request):
         return _TEMPLATES.TemplateResponse(request, "workspace.html", {})
 
+    @app.get("/intelligence", response_class=HTMLResponse)
+    def intelligence_page(request: Request):
+        """Optional virtual catalog studio, separate from real retailer history."""
+        return _TEMPLATES.TemplateResponse(request, "intelligence.html", {})
+
     @app.get("/api/workspace/status")
     def status():
         return store.stats()

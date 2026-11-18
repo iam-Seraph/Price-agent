@@ -4,6 +4,12 @@ Python learning project with **four separate workflows**: mock-data ReAct AI, a 
 
 > **Status (18 November 2026):** Phases 2–5 are merged into `main`. Phase 5 can import up to **1,000,000 accepted Open Food Facts source rows**, but no million-product dataset is bundled or verified imported. **No automatic retailer tracking or AI-to-catalog integration.** Not production-ready. See [PHASE5.md](PHASE5.md) and [AUDIT.md](AUDIT.md).
 
+## Intelligence Studio — interactive virtual catalog
+
+Open **`http://127.0.0.1:8000/intelligence`** while running the existing `python -m price_engine.workspace` server. This new dark-mode interface provides **3,145,728 virtual SKU IDs** across neural hardware, gaming peripherals and robotics, generated in 24-item pages. A Web Worker scores 3,072 recurring synthetic spec profiles for natural-language queries; there is no multi-million-row in-memory data set or trained search model. Features include cross-dataset comparison for up to four products, mock currency conversion, advisor explanations, JSON/Markdown export, a WebGL2 background and an illustrative countdown. **All products, prices, benchmark claims, sentiment scores, telemetry, currency rates and launch milestones are fictional.** The preview email form does not send or save addresses. Existing real-product research stays in `/workspace` and real Open Food Facts identities in `/catalog`.
+
+See [INTELLIGENCE_STUDIO.md](INTELLIGENCE_STUDIO.md) for exact launch commands, keyboard shortcuts, performance limitations and the production readiness checklist.
+
 ## Components
 
 | Component | Command or location | Source of prices | Limits |
