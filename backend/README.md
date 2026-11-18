@@ -123,3 +123,34 @@ See the [root README](../README.md) for the consolidated project quick start,
 and [AUDIT.md](../AUDIT.md) for preserved findings, historical test evidence,
 actual published commit hashes, and outstanding limitations. Those historical
 offline test results are not fresh GitHub CI results.
+
+## Phase 5 — real product catalog
+
+The separate Open Food Facts importer and FTS5 search page live on the Phase 5
+feature branch. They add real product identities only; they do NOT add live
+retailer prices, stock or AI-agent linkage. The official bulk export is large,
+downloaded by the user, and kept out of Git.
+
+From the repo root (PowerShell):
+
+~~~powershell
+python -m pip install -r backend/requirements-dashboard.txt
+New-Item -ItemType Directory -Force backend/data | Out-Null
+curl.exe -L --fail --retry 3 "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz" -o "backend/data/openfoodfacts.csv.gz"
+cd backend
+python -m price_engine.catalog_import --input data/openfoodfacts.csv.gz --db demo_fresh.sqlite3 --max-rows 1000000
+python -m price_engine.dashboard --db demo_fresh.sqlite3 --host 127.0.0.1 --port 8000
+~~~
+
+Open http://127.0.0.1:8000/catalog for indexed product search.
+Use the SAME database for the import and dashboard. The importer creates the
+catalog schema; the existing demo database supplies the older price schema.
+
+New read-only routes: GET /catalog, GET /api/catalog/stats, and
+GET /api/catalog/search (q, limit<=100, offset). The catalog is independent
+of products, retailer_listings, and append-only price_history tables.
+Tests: python -m unittest discover -s tests -v from backend.
+
+For data provenance, ODbL obligations, import limits, troubleshooting and
+clear distinctions between a 1M-row target and actually imported records,
+see [PHASE5.md](../PHASE5.md).
