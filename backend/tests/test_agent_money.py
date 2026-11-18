@@ -8,7 +8,7 @@ from pathlib import Path
 
 class LegacyMoneyBoundaryTest(unittest.TestCase):
     def test_ten_percent_boundary_does_not_round_to_false_deal(self):
-        source=(Path(__file__).resolve().parents[2]/'price_agent.py').read_text()
+        source=(Path(__file__).resolve().parents[2]/'src'/'price_agent.py').read_text()
         tree=ast.parse(source)
         funcs=[node for node in tree.body if isinstance(node,ast.FunctionDef)
                and node.name in ('money','evaluate_deal')]
