@@ -23,6 +23,10 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
     def verified_page(request: Request):
         return TEMPLATES.TemplateResponse(request, "verified.html", {})
 
+    @app.get("/api/verified/status")
+    def verified_status():
+        return store.stats()
+
     @app.get("/api/verified/offers")
     def list_verified_offers(limit: int = Query(20, ge=1, le=100)):
         return {"offers": store.list_offers(limit), "provenance": "PROVIDER_REPORTED"}
