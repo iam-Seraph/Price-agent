@@ -103,6 +103,8 @@ def search_serpapi(query: str, *, api_key: str | None = None,
                 "hl": "en", "api_key": key,
             })
             response.raise_for_status()
+            if len(response.content) > 2 * 1024 * 1024:
+                raise ProviderUnavailable("Provider response exceeds the parsing limit")
             payload = response.json()
     except (httpx.HTTPError, ValueError) as exc:
         # Avoid exposing query-string credentials in logs or error messages.
