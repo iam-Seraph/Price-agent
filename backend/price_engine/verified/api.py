@@ -25,6 +25,13 @@ class VerifiedSearchRequest(BaseModel):
     limit: int = Field(default=5, ge=1, le=5)
 
 
+class WatchCreateRequest(BaseModel):
+    query: str = Field(min_length=2, max_length=120)
+    budget: str = Field(min_length=1, max_length=30)
+    currency: Literal["INR", "USD"] = "INR"
+    interval_minutes: int = Field(default=60, ge=15, le=1440)
+
+
 TEMPLATES = Jinja2Templates(
     directory=str(Path(__file__).resolve().parents[1] / "templates"))
 
@@ -70,6 +77,27 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
     @app.get("/api/verified/status")
     def verified_status():
         return store.stats()
+
+    @app.post("/api/verified/watches", status_code=201)
+    def create_verified_watch(body: WatchCreateRequest):
+        try:
+            if len(watches.list_watches(limit=101)) >= 100:
+                raise HTTPException(status_code=429, detail="Local watchlist capacity reached")
+            watch_id = watches.add_watch(body.query, body.budget,
+                                        body.currency, body.interval_minutes)
+            return {"watch_id": watch_id, "saved": True, "polling_started": False}
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/verified/watches/{watch_id}/disable")
+    def disable_verified_watch(watch_id: str):
+        try:
+            changed = watches.disable_watch(watch_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        if not changed:
+            raise HTTPException(status_code=404, detail="Enabled watch not found")
+        return {"disabled": True}
 
     @app.get("/api/verified/watches")
     def list_verified_watches(limit: int = Query(100, ge=1, le=200)):
