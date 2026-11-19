@@ -17,6 +17,36 @@
     <nav aria-label="Project navigation"><a href="/">History</a><a href="/catalog">Catalog</a><a href="/workspace">Workspace</a></nav>
   </header>
   <main>
+    <section aria-labelledby="research-title" class="panel">
+      <h2 id="research-title">Search real provider offers</h2>
+      <p class="muted">An explicit search contacts SerpApi and stores only source-attributed results. It does not invent prices if the provider is unavailable. Private SerpApi credentials are required on the server.</p>
+      <form id="search-form">
+        <label for="search-query">Product search</label>
+        <div class="fields">
+          <input id="search-query" name="query" type="search" minlength="2" maxlength="120" placeholder="e.g. wireless keyboard" required>
+          <input id="search-budget" name="budget" type="text" inputmode="decimal" value="60000" maxlength="30" aria-label="Search budget in selected currency" required>
+          <select id="search-currency" name="currency" aria-label="Search currency"><option value="INR">INR</option><option value="USD">USD</option></select>
+          <button type="submit">Search &amp; store</button>
+        </div>
+      </form>
+      <p id="search-status" role="status" aria-live="polite"></p>
+    </section>
+    <section aria-labelledby="watch-title" class="panel">
+      <h2 id="watch-title">Watchlist &amp; opt-in alerts</h2>
+      <p class="muted">Creating a watch does not start a worker. Start the monitor separately with <code>python price_watch.py --db tracker.sqlite3 run</code>. Delivery also requires a separately started worker and private credentials.</p>
+      <form id="watch-form">
+        <div class="fields">
+          <input id="watch-query" type="text" minlength="2" maxlength="120" placeholder="Product query to track" aria-label="Product to watch" required>
+          <input id="watch-budget" type="text" inputmode="decimal" value="60000" maxlength="30" aria-label="Watch price threshold" required>
+          <select id="watch-currency" aria-label="Watch currency"><option value="INR">INR</option><option value="USD">USD</option></select>
+          <select id="watch-interval" aria-label="Check interval"><option value="60">Hourly</option><option value="360">Every six hours</option><option value="1440">Daily</option></select>
+          <button type="submit">Save watch</button>
+        </div>
+      </form>
+      <p id="watch-status" role="status" aria-live="polite"></p>
+      <div class="scroll"><table><thead><tr><th>Query</th><th>Budget</th><th>Status</th><th>Actions</th></tr></thead><tbody id="watches-body"></tbody></table></div>
+      <p class="muted">Email and Telegram notifications require manual opt-in per watch and private server configuration. No automatic purchases are performed.</p>
+    </section>
     <section aria-labelledby="summary-title" class="panel">
       <h2 id="summary-title">Recorded evidence</h2>
       <div class="metrics">
