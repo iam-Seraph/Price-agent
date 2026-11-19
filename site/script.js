@@ -2,11 +2,11 @@
 const $ = id => document.getElementById(id);
 const commands = {
   dashboard: {
-    code: `git clone https://github.com/iam-Seraph/Price-agent.git\ncd Price-agent\npython -m pip install -r backend/requirements-dashboard.txt\ncd backend\n# Only for a NEW database (run once):\npython -m price_engine.demo --db demo_fresh.sqlite3\npython -m price_engine.dashboard --db demo_fresh.sqlite3 --host 127.0.0.1 --port 8000`,
-    note: 'Dashboard → http://127.0.0.1:8000 · Skip the demo if your DB is already seeded.'
+    code: `git clone https://github.com/iam-Seraph/Price-agent.git\ncd Price-agent\npython -m pip install -r backend/requirements-workspace.txt\n# Initialize legacy schema once, without seeding fake quotes:\npython -c "from backend.price_engine.storage import PriceStore; PriceStore('tracker.sqlite3','backend/migrations/001_initial.sql').close()"\ncd backend\npython -m price_engine.workspace --db ../tracker.sqlite3 --workspace-db workspace.sqlite3 --host 127.0.0.1 --port 8000`,
+    note: 'Verified offers → http://127.0.0.1:8000/verified · No price quotes are generated on launch.'
   },
   catalog: {
-    code: `# From the repository root:\nNew-Item -ItemType Directory -Force backend/data | Out-Null\ncurl.exe -L --fail --retry 3 "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz" -o "backend/data/openfoodfacts.csv.gz"\ncd backend\npython -m price_engine.catalog_import --input data/openfoodfacts.csv.gz --db demo_fresh.sqlite3 --max-rows 10000`,
+    code: `# From the repository root:\nNew-Item -ItemType Directory -Force backend/data | Out-Null\ncurl.exe -L --fail --retry 3 "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz" -o "backend/data/openfoodfacts.csv.gz"\ncd backend\npython -m price_engine.catalog_import --input data/openfoodfacts.csv.gz --db ../tracker.sqlite3 --max-rows 10000`,
     note: 'The export can be very large. 10,000 is a smoke-test cap, not a claimed product count. Use --max-rows 1000000 to attempt the full target.'
   },
   agent: {

@@ -1,6 +1,6 @@
 # Phase 5 — Loops 41–50: source-qualified alerts and opt-in delivery
 
-This is the **new** alert Phase 5 checkpoint, distinct from the existing PHASE5.md catalog-import documentation. It builds upon merged Phases 1–4 and retains existing dashboard, API, agent and monitor commands.
+This checkpoint is for **alerts (loops 41–50)**, distinct from the earlier [Open Food Facts catalog import guide](../guides/open-food-facts-catalog.md), which was also labeled “Phase 5”. It builds upon merged Phases 1–4 and retains existing dashboard, API, agent and monitor commands.
 
 --- LOOP [41]: Durable alert schema ---
 Created subscriber channel rules and uniquely keyed delivery outbox records in SQLite. No contact details or API secrets are stored.
