@@ -80,7 +80,7 @@ async function chooseOffer(offer) {
   $("currency").value = offer.currency;
   showMessage("decision", "Select Analyze to evaluate source-backed deal rules.");
   $("checks").replaceChildren();
-  await refreshHistory();
+  await Promise.all([refreshHistory(), refreshIntelligence()]);
 }
 
 async function refreshHistory() {
@@ -92,6 +92,30 @@ async function refreshHistory() {
   } catch (error) {
     drawHistory([], currentOffer.currency);
     showMessage("history-text", error.message);
+  }
+}
+
+async function refreshIntelligence() {
+  if (!currentOffer) return;
+  const id = currentOffer.offer_id;
+  $("intelligence-results").textContent = "Reading stored history…";
+  $("intelligence-days").textContent = "";
+  try {
+    const data = await api("/api/verified/offers/" + encodeURIComponent(id) + "/intelligence?days=90");
+    if (!currentOffer || currentOffer.offer_id !== id) return;
+    const a = data.anomaly, t = data.trend, q = data.evidence;
+    $("intelligence-results").textContent =
+      "Anomaly: " + a.status.replaceAll("_", " ") +
+      " • Observed trend: " + t.direction.replaceAll("_", " ") +
+      " • Evidence completeness: " + q.evidence_completeness_score + "/100";
+    $("intelligence-days").textContent =
+      data.series.observed_days + " observed in-stock days in the last 90 days. " +
+      data.series.records_discarded + " unknown/out-of-stock records excluded. " +
+      (data.series.truncated_to_latest_1000 ? "History truncated to 1,000 records. " : "") +
+      "Scores do not establish merchant trust or predict future prices.";
+  } catch (error) {
+    if (currentOffer && currentOffer.offer_id === id)
+      $("intelligence-results").textContent = "Source evidence unavailable: " + error.message;
   }
 }
 
