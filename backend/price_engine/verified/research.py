@@ -8,11 +8,13 @@ from typing import Any
 from .money import format_minor, minor_units, validate_currency
 from .analysis import analyze_offer
 from .store import VerifiedPriceStore
+from .learning import LearningStore
 
 
 def research_offers(store: VerifiedPriceStore, query: str, budget: str | int | Decimal,
                     *, currency: str = "INR", limit: int = 30,
-                    now: datetime | None = None) -> dict[str, Any]:
+                    now: datetime | None = None,
+                    learning: LearningStore | None = None) -> dict[str, Any]:
     """Find products; never merge different retailer SKUs into a single identity."""
     currency = validate_currency(currency)
     budget_minor = minor_units(budget, currency)
@@ -51,7 +53,25 @@ def research_offers(store: VerifiedPriceStore, query: str, budget: str | int | D
             "evidence_sha256": str(row["evidence_sha256"]),
             "provenance": str(row["provenance"]),
         })
+    # Preferences may reorder eligible listings, but cannot change price facts,
+    # eligibility, budget checks, provenance, or historical deal decisions.
+    enabled = bool(learning.status()["enabled"]) if learning is not None else False
+    votes = (learning.preferences_for([str(x["offer_id"]) for x in output])
+             if enabled and learning is not None else {})
+    personalized = sorted(output, key=lambda item: (
+        not item["budget_candidate"],
+        -({"PREFER": 1, "AVOID": -1}.get(votes.get(str(item["offer_id"])), 0)),
+        int(item["price_minor"]), str(item["offer_id"])
+    ))
+    for item in output:
+        item["user_preference"] = votes.get(str(item["offer_id"]))
     return {
+        "personalization": {
+            "enabled": enabled,
+            "ranked_offer_ids": [str(x["offer_id"]) for x in personalized] if enabled else [],
+            "feedback_count_for_results": len(votes),
+            "note": "User votes only affect preferred ordering within price-eligibility groups. Price facts and deal checks are unchanged.",
+        },
         "query": query.strip(), "currency": currency,
         "budget_minor": budget_minor, "budget_display": format_minor(budget_minor,currency),
         "results": output, "matching_offers": len(output),

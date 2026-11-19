@@ -77,6 +77,7 @@ function drawHistory(points, currency) {
 async function chooseOffer(offer) {
   currentOffer = offer;
   $("selection").textContent = offer.title + " — " + offer.merchant;
+  $("learning-selected").textContent = "Selected for feedback: " + offer.title + " — " + offer.merchant;
   $("currency").value = offer.currency;
   showMessage("decision", "Select Analyze to evaluate source-backed deal rules.");
   $("checks").replaceChildren();
@@ -349,6 +350,19 @@ $("compare-form").addEventListener("submit", async event => {
       td.textContent = "No matching source-attributed offers are stored yet.";
       tr.appendChild(td); tbody.appendChild(tr);
     }
+    const learning = result.research.personalization;
+    if (learning && learning.enabled) {
+      const byOffer = new Map(result.research.results.map(x => [x.offer_id, x]));
+      const ranking = learning.ranked_offer_ids.slice(0, 5).map(id => {
+        const item = byOffer.get(id);
+        return item ? item.title + " (" + (item.user_preference || "no vote") + ")" : "";
+      }).filter(Boolean);
+      $("learning-ranked").textContent = ranking.length
+        ? "Your preference order (budget-eligible listings first): " + ranking.join(" • ")
+        : "No matching source-attributed listings.";
+    } else {
+      $("learning-ranked").textContent = "Opt-in learning is off. Standard price ranking remains unchanged.";
+    }
     showMessage("compare-status", "Found " + rows.length + " source-attributed listings from " +
       result.comparison.merchant_count + " merchants. Prices are NOT guaranteed for equivalent variants.");
   } catch (error) {
@@ -429,3 +443,89 @@ $("assistant-confirm").addEventListener("click", async () => {
     commandPlan = null;
   }
 });
+
+
+async function refreshConfiguration() {
+  try {
+    const info = await api("/api/verified/configuration");
+    const provider = info.providers.google_shopping_serpapi;
+    const groq = info.providers.groq_explanations;
+    showMessage("api-config-status", "SerpApi: " + provider.replaceAll("_", " ") +
+      " • Groq: " + groq.replaceAll("_", " ") +
+      ". No live credential or provider network check was performed.");
+  } catch (error) {
+    showMessage("api-config-status", "Credential status unavailable: " + error.message);
+  }
+}
+
+let learningEnabled = false;
+
+async function refreshLearning() {
+  try {
+    const state = await api("/api/verified/learning");
+    learningEnabled = Boolean(state.enabled);
+    showMessage("learning-status",
+      (learningEnabled ? "Enabled" : "Disabled") +
+      " • " + state.saved_feedback_count + " saved offer preference(s). " +
+      "Stored locally, no model training or background retrieval.");
+  } catch (error) {
+    learningEnabled = false;
+    showMessage("learning-status", "Local learning unavailable: " + error.message);
+  }
+}
+
+$("learning-enable").addEventListener("click", async () => {
+  if (!window.confirm("Enable local preference memory for offers you explicitly rate?")) return;
+  try {
+    await postAPI("/api/verified/learning/opt-in", {enabled: true, confirmed: true});
+    await refreshLearning();
+  } catch (error) { showMessage("learning-feedback-status", error.message); }
+});
+
+$("learning-disable").addEventListener("click", async () => {
+  try {
+    await postAPI("/api/verified/learning/opt-in", {enabled: false, confirmed: true});
+    await refreshLearning();
+    $("learning-ranked").textContent = "Preferences paused; standard price order is used.";
+  } catch (error) { showMessage("learning-feedback-status", error.message); }
+});
+
+$("learning-clear").addEventListener("click", async () => {
+  if (!window.confirm("Permanently erase ALL saved offer feedback and disable local learning? Historical prices remain unchanged.")) return;
+  try {
+    await postAPI("/api/verified/learning/clear", {confirmed: true});
+    await refreshLearning();
+    $("learning-ranked").textContent = "Offer preferences cleared.";
+    showMessage("learning-feedback-status", "All local preference feedback erased.");
+  } catch (error) { showMessage("learning-feedback-status", error.message); }
+});
+
+for (const [buttonId, preference] of [["learning-prefer", "PREFER"], ["learning-avoid", "AVOID"]]) {
+  $(buttonId).addEventListener("click", async () => {
+    if (!currentOffer) { showMessage("learning-feedback-status", "Select a saved offer first."); return; }
+    if (!learningEnabled) { showMessage("learning-feedback-status", "Enable local learning before rating."); return; }
+    try {
+      await postAPI("/api/verified/learning/feedback", {
+        offer_id: currentOffer.offer_id, preference
+      });
+      showMessage("learning-feedback-status", preference + " saved for " + currentOffer.title +
+        ". Run a new comparison to see personalized ordering.");
+      await refreshLearning();
+    } catch (error) { showMessage("learning-feedback-status", error.message); }
+  });
+}
+
+$("learning-forget").addEventListener("click", async () => {
+  if (!currentOffer) { showMessage("learning-feedback-status", "Select a saved offer first."); return; }
+  try {
+    const result = await postAPI("/api/verified/learning/forget", {
+      offer_id: currentOffer.offer_id
+    });
+    showMessage("learning-feedback-status",
+      result.removed ? "Feedback for selected offer erased." : "No saved feedback for this offer.");
+    await refreshLearning();
+  } catch (error) { showMessage("learning-feedback-status", error.message); }
+});
+
+refreshConfiguration();
+refreshLearning();

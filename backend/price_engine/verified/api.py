@@ -24,6 +24,8 @@ from .intelligence import daily_series, detect_price_anomaly, price_trend
 from .quality import evidence_quality
 from .alert_store import AlertStore
 from .store import VerifiedPriceStore
+from .learning import LearningStore
+from .configuration import configuration_status
 from .watch_store import WatchStore
 
 class AssistantCommandRequest(BaseModel):
@@ -48,6 +50,24 @@ class WatchCreateRequest(BaseModel):
     interval_minutes: int = Field(default=60, ge=15, le=1440)
 
 
+class LearningOptInRequest(BaseModel):
+    enabled: bool
+    confirmed: bool = False
+
+
+class LearningFeedbackRequest(BaseModel):
+    offer_id: str = Field(min_length=64, max_length=64)
+    preference: Literal["PREFER", "AVOID"]
+
+
+class LearningForgetRequest(BaseModel):
+    offer_id: str = Field(min_length=64, max_length=64)
+
+
+class LearningClearRequest(BaseModel):
+    confirmed: bool = False
+
+
 class AlertChannelRequest(BaseModel):
     watch_id: str = Field(min_length=32, max_length=32)
     channel: Literal["EMAIL", "TELEGRAM"]
@@ -66,6 +86,7 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
     last_search = [0.0]
     watches = WatchStore(db_path)
     alerts = AlertStore(db_path)
+    learning = LearningStore(db_path)
 
     @app.get("/verified", response_class=HTMLResponse)
     def verified_page(request: Request):
@@ -106,7 +127,8 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
             limit: int = Query(30, ge=1, le=50)):
         """Compare saved source observations only; never execute web requests."""
         try:
-            result = research_offers(store, q, budget, currency=currency, limit=limit)
+            result = research_offers(store, q, budget, currency=currency, limit=limit,
+                                     learning=learning)
             return {"research": result, "comparison": comparison_table(result),
                     "explanations": explain_candidates(result)}
         except ValueError as exc:
@@ -125,6 +147,43 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
         """Execute only supported commands; watch creation needs explicit consent."""
         try:
             return execute_command(db_path, body.command, confirmed=body.confirmed)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.get("/api/verified/configuration")
+    def verified_configuration():
+        """Offline credential presence only; never expose keys or claim API access."""
+        return configuration_status()
+
+    @app.get("/api/verified/learning")
+    def verified_learning_status():
+        return learning.status()
+
+    @app.post("/api/verified/learning/opt-in")
+    def verified_learning_opt_in(body: LearningOptInRequest):
+        try:
+            return learning.set_enabled(body.enabled, confirmed=body.confirmed)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/verified/learning/feedback")
+    def verified_learning_feedback(body: LearningFeedbackRequest):
+        try:
+            return learning.give_feedback(body.offer_id, body.preference)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/verified/learning/forget")
+    def verified_learning_forget(body: LearningForgetRequest):
+        try:
+            return {"removed": learning.forget_offer(body.offer_id)}
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/verified/learning/clear")
+    def verified_learning_clear(body: LearningClearRequest):
+        try:
+            return learning.clear_all(confirmed=body.confirmed)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 

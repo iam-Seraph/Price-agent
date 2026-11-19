@@ -1,4 +1,4 @@
-# Add this to the existing repository-root .env file.
-# No key is required for DummyJSON sample data and the offline demo fallback.
-# Optional: live Google Shopping via SerpApi (usage/charges depend on your plan).
-SERPAPI_KEY=
+# Canonical configuration template is ../.env.example.
+# Copy that root template to ../.env (ignored by git), then set the keys
+# for the providers you explicitly choose. This file is a compatibility hint.
+# You do not need keys for offline demos or CI fixtures.

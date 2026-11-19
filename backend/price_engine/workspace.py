@@ -7,6 +7,9 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from dotenv import load_dotenv
+
+from .verified.configuration import ROOT as REPO_ROOT
 from typing import Literal
 from urllib.parse import urlsplit
 
@@ -125,6 +128,7 @@ def create_app(history_db: str | Path, workspace_db: str | Path = "workspace.sql
     from .dashboard import create_app as existing_dashboard
     if Path(history_db).resolve() == Path(workspace_db).resolve():
         raise ValueError("Workspace database must differ from the history database")
+    load_dotenv(REPO_ROOT / ".env", override=False)
     app = existing_dashboard(history_db)
     register_workspace_routes(app, workspace_db)
     register_verified_routes(app, history_db)

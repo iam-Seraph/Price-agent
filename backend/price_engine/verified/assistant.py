@@ -10,6 +10,7 @@ from .comparison import comparison_table
 from .explanations import explain_candidates
 from .research import research_offers
 from .store import VerifiedPriceStore
+from .learning import LearningStore
 from .watch_store import WatchStore
 
 
@@ -42,7 +43,8 @@ def execute_command(db_path: str | Path, command: str, *,
                 "message": "Watch saved only. Start a monitor separately and opt in to an alert channel."}
     store = VerifiedPriceStore(db_path)
     budget = Decimal(plan.budget_minor) / Decimal(100)
-    research = research_offers(store, plan.query, budget, currency=plan.currency, limit=30)
+    research = research_offers(store, plan.query, budget, currency=plan.currency, limit=30,
+                               learning=LearningStore(db_path))
     return {
         "status": "RESEARCH_COMPLETED",
         "research": research,

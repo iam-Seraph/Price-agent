@@ -2,7 +2,7 @@
 
 **Local-first Python price research and experimentation toolkit.** This repository contains a source-attributed SerpApi/SQLite offer pipeline, price history and watch tools, an optional Groq explanation layer, an Open Food Facts product-identity catalog, and separate **clearly labeled mock/simulated** demos.
 
-**Status — 19 November 2026:** Engineering checkpoints **1–100 (Phases 1–10)** are merged into `main`. These are development milestones, **not 100 continuously running autonomous agents**. Offline GitHub Actions regression workflows passed for the Phase 10 merge. **Not production-ready, not multi-user, and not an independently verified retailer-price service.**
+**Status — 20 November 2026:** Engineering checkpoints **1–100 (Phases 1–10)** remain complete, with a **Phase 11 configuration and opt-in local learning extension**. Milestones are not continuously running autonomous agents. CI tests are offline. **Not production-ready, multi-user or an independently verified retailer-price service.**
 
 ## Start here — local verified-offer dashboard
 
@@ -35,9 +35,26 @@ No retailer requests or monitoring workers start merely by opening the dashboard
 
 ## Configure optional external providers safely
 
-Copy `.env.example` to a local `.env` at the repository root. Set `SERPAPI_KEY` for explicit Google Shopping searches and optionally `GROQ_API_KEY` for model-generated explanations; check the model's current availability and API charges. Never commit `.env`, keys, local databases or downloaded exports. If a key was previously shared in chat, a repository or public logs, **rotate it**.
+Copy the **updated** `.env.example` to a local `.env` at the repository root. Set `SERPAPI_KEY` for explicit Google Shopping searches and optionally `GROQ_API_KEY` for model explanations. Optional email SMTP and Telegram keys are documented in the same template. Run `python price_config.py` for a **secret-safe, offline presence check**; CONFIGURED_UNVERIFIED is not proof that the credential works or has quota. The local workspace loads the root `.env` automatically (without overriding existing environment variables). Never commit `.env`, keys, local databases or downloaded exports. If a key was previously shared in chat, a repository or public logs, **rotate it**.
 
 SerpApi offers are **attributed provider observations**. They are not independently verified stock/merchant/price facts. Missing data must not be replaced with generated prices.
+
+## Opt-in local learning (Phase 11)
+
+Use the **Preferences** panel at `/verified`, or these commands from the repository root:
+
+~~~bash
+python price_config.py
+python price_learning.py --db tracker.sqlite3 status
+python price_learning.py --db tracker.sqlite3 enable --confirm
+# First ingest a source-attributed product, then use its 64-character offer_id:
+python price_learning.py --db tracker.sqlite3 prefer OFFER_ID
+python price_learning.py --db tracker.sqlite3 avoid OFFER_ID
+python price_learning.py --db tracker.sqlite3 forget OFFER_ID
+python price_learning.py --db tracker.sqlite3 clear --confirm
+~~~
+
+Memory is **disabled by default** and stores only explicit `PREFER`/`AVOID` votes on previously observed provider offers. It changes the **separately labeled personalized result order**, never objective price comparison, stock, provenance, budget eligibility, historical deal verdicts, or model weights. Deleting feedback does **not** erase price history. Nothing scrapes arbitrary Google pages: Google Shopping is accessed through the existing SerpApi adapter; Open Food Facts remains a separately attributed catalog. See [Phase 11 guide](docs/phases/phase-11-configuration-and-learning.md).
 
 ## Root command reference
 
@@ -50,6 +67,8 @@ Run these from the repository root, using the **same** `tracker.sqlite3` for rel
 | `python price_research.py "headphones" --budget 3000 --currency INR --db tracker.sqlite3` | Compare previously stored offers |
 | `python price_intelligence.py OFFER_ID --db tracker.sqlite3 --days 90` | Read recorded daily prices, anomaly heuristics, observed trends and evidence completeness |
 | `python price_audit.py --db tracker.sqlite3` | Run on-demand SQLite integrity/provenance diagnostics |
+| `python price_config.py` | Offline API credential presence check (never prints secrets) |
+| `python price_learning.py --db tracker.sqlite3 status` | View local opt-in feedback status |
 | `python price_watch.py --db tracker.sqlite3 list` | Show explicitly saved watch rules |
 | `python price_assistant.py "compare headphones under ₹3000" --db tracker.sqlite3` | Deterministic natural-language comparison (not an unrestricted agent) |
 | `python price_agent.py` | Separate **fictional USD** ReAct demo; no real-store certification |
