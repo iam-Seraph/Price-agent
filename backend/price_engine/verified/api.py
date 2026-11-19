@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from .money import minor_units
 from .research import research_offers
 from .comparison import comparison_table
+from .assistant import plan_command, execute_command
 from .explanations import explain_candidates
 from .provider import ProviderUnavailable, search_serpapi
 
@@ -21,6 +22,14 @@ from .analysis import analyze_offer
 from .alert_store import AlertStore
 from .store import VerifiedPriceStore
 from .watch_store import WatchStore
+
+class AssistantCommandRequest(BaseModel):
+    command: str = Field(min_length=8, max_length=250)
+
+
+class AssistantExecuteRequest(AssistantCommandRequest):
+    confirmed: bool = False
+
 
 class VerifiedSearchRequest(BaseModel):
     query: str = Field(min_length=2, max_length=120)
@@ -97,6 +106,22 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
             result = research_offers(store, q, budget, currency=currency, limit=limit)
             return {"research": result, "comparison": comparison_table(result),
                     "explanations": explain_candidates(result)}
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/verified/assistant/plan")
+    def assistant_plan(body: AssistantCommandRequest):
+        """Show a deterministic plan without writing or contacting providers."""
+        try:
+            return plan_command(body.command)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/verified/assistant/execute")
+    def assistant_execute(body: AssistantExecuteRequest):
+        """Execute only supported commands; watch creation needs explicit consent."""
+        try:
+            return execute_command(db_path, body.command, confirmed=body.confirmed)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 

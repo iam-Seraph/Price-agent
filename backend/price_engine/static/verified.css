@@ -37,3 +37,5 @@ canvas { width: 100%; border-radius: 8px; background: #172334; }
 footer { text-align: center; padding: 2rem 1rem; }
 @media (max-width: 920px) { .columns { grid-template-columns: 1fr; } .metrics { grid-template-columns: 1fr; } header { align-items: flex-start; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+
+.command-preview { max-height: 320px; overflow: auto; padding: 1rem; border: 1px solid #33475e; border-radius: 8px; white-space: pre-wrap; overflow-wrap: anywhere; background: #0a1627; color: #c2d7e7; font-size: .85rem; }

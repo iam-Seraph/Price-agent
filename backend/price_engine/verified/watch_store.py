@@ -42,6 +42,15 @@ class WatchStore:
         created = watch_time(now) if now is not None else utc_now()
         with self.prices.connect() as db:
             with db:
+                db.execute("BEGIN IMMEDIATE")
+                existing = db.execute("""
+                    SELECT watch_id FROM verified_watch_queries
+                    WHERE enabled=1 AND query_text=? COLLATE NOCASE
+                      AND currency=? AND budget_minor=? AND interval_seconds=?
+                    ORDER BY created_at DESC LIMIT 1
+                """, (query.strip(),currency,minor,interval_minutes*60)).fetchone()
+                if existing is not None:
+                    return str(existing["watch_id"])
                 db.execute("""
                     INSERT INTO verified_watch_queries
                     (watch_id,query_text,currency,budget_minor,interval_seconds,

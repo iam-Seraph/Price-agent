@@ -31,6 +31,21 @@
       </form>
       <p id="search-status" role="status" aria-live="polite"></p>
     </section>
+    <section class="panel" aria-labelledby="assistant-title">
+      <h2 id="assistant-title">Natural-language shopping commands</h2>
+      <p class="muted">Supported: “watch headphones below ₹3000”, “notify me when laptop drops below ₹60000”, or “compare headphones under ₹3000”. Unknown instructions are rejected rather than guessed.</p>
+      <form id="assistant-plan-form">
+        <label for="assistant-command">Enter one supported command</label>
+        <div class="fields">
+          <input id="assistant-command" type="text" minlength="8" maxlength="250" required placeholder="compare headphones under ₹3000">
+          <button type="submit">Preview plan</button>
+        </div>
+      </form>
+      <p id="assistant-status" role="status" aria-live="polite"></p>
+      <pre id="assistant-preview" class="command-preview" aria-label="Parsed command plan"></pre>
+      <button id="assistant-confirm" type="button" disabled>Run approved command</button>
+      <p class="muted">Creating a watch needs an additional confirmation. The command planner never buys products, starts background jobs or invents prices.</p>
+    </section>
     <section aria-labelledby="compare-title" class="panel">
       <h2 id="compare-title">Compare saved provider offers</h2>
       <p class="muted">Read-only research. Products with different retailer IDs or variants are never assumed identical, even if their names are similar.</p>

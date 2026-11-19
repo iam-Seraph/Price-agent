@@ -332,3 +332,76 @@ $("compare-form").addEventListener("submit", async event => {
     showMessage("compare-status", "Comparison unavailable: " + error.message);
   }
 });
+
+
+let plannedCommand = null;
+let commandPlan = null;
+
+$("assistant-command").addEventListener("input", () => {
+  plannedCommand = null;
+  commandPlan = null;
+  $("assistant-confirm").disabled = true;
+  $("assistant-preview").textContent = "";
+});
+
+$("assistant-plan-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  plannedCommand = null;
+  commandPlan = null;
+  $("assistant-confirm").disabled = true;
+  const command = $("assistant-command").value.trim();
+  try {
+    const plan = await postAPI("/api/verified/assistant/plan", {command});
+    plannedCommand = command;
+    commandPlan = plan;
+    $("assistant-preview").textContent = JSON.stringify(plan, null, 2);
+    showMessage("assistant-status",
+      plan.needs_explicit_confirmation
+        ? "Preview created. Watch creation requires an additional confirmation."
+        : "Read-only comparison is ready to run.");
+    $("assistant-confirm").disabled = false;
+  } catch (error) {
+    $("assistant-preview").textContent = "";
+    showMessage("assistant-status", "Command not recognized: " + error.message);
+  }
+});
+
+$("assistant-confirm").addEventListener("click", async () => {
+  if (!plannedCommand || !commandPlan) return;
+  if ($("assistant-command").value.trim() !== plannedCommand) {
+    showMessage("assistant-status", "Command changed. Preview it again.");
+    $("assistant-confirm").disabled = true;
+    return;
+  }
+  const requiresConsent = commandPlan.needs_explicit_confirmation;
+  if (requiresConsent && !window.confirm(
+      "Save this product watch? Monitoring and notifications will NOT start automatically.")) return;
+  $("assistant-confirm").disabled = true;
+  try {
+    const output = await postAPI("/api/verified/assistant/execute", {
+      command: plannedCommand, confirmed: Boolean(requiresConsent)
+    });
+    if (output.status === "WATCH_SAVED") {
+      showMessage("assistant-status", "Watch saved without starting monitoring.");
+      $("assistant-preview").textContent = JSON.stringify(output, null, 2);
+      await refreshWatches();
+    } else if (output.status === "RESEARCH_COMPLETED") {
+      const overview = {
+        status: output.status,
+        matches: output.research.matching_offers,
+        budget_candidates: output.research.budget_candidates,
+        listings_are_not_equivalent: true,
+        top_observed_listings: output.comparison.rows.slice(0, 5)
+      };
+      $("assistant-preview").textContent = JSON.stringify(overview, null, 2);
+      showMessage("assistant-status", "Read-only saved-offer comparison completed.");
+    } else {
+      showMessage("assistant-status", output.status || "No command executed");
+    }
+  } catch (error) {
+    showMessage("assistant-status", "Execution unavailable: " + error.message);
+  } finally {
+    plannedCommand = null;
+    commandPlan = null;
+  }
+});
