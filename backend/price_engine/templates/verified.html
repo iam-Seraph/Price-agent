@@ -31,6 +31,20 @@
       </form>
       <p id="search-status" role="status" aria-live="polite"></p>
     </section>
+    <section aria-labelledby="compare-title" class="panel">
+      <h2 id="compare-title">Compare saved provider offers</h2>
+      <p class="muted">Read-only research. Products with different retailer IDs or variants are never assumed identical, even if their names are similar.</p>
+      <form id="compare-form">
+        <div class="fields">
+          <input id="compare-query" type="search" minlength="2" maxlength="120" placeholder="Search saved product names" aria-label="Saved product query" required>
+          <input id="compare-budget" type="text" inputmode="decimal" maxlength="30" value="60000" aria-label="Comparison budget" required>
+          <select id="compare-currency" aria-label="Currency"><option value="INR">INR</option><option value="USD">USD</option></select>
+          <button type="submit">Compare stored offers</button>
+        </div>
+      </form>
+      <p id="compare-status" role="status" aria-live="polite"></p>
+      <div class="scroll"><table><thead><tr><th>Product</th><th>Merchant</th><th>Price</th><th>Freshness</th><th>Assessment</th></tr></thead><tbody id="comparison-body"></tbody></table></div>
+    </section>
     <section aria-labelledby="watch-title" class="panel">
       <h2 id="watch-title">Watchlist &amp; opt-in alerts</h2>
       <p class="muted">Creating a watch does not start a worker. Start the monitor separately with <code>python price_watch.py --db tracker.sqlite3 run</code>. Delivery also requires a separately started worker and private credentials.</p>
