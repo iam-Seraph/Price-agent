@@ -30,6 +30,7 @@
         </div>
       </form>
       <p id="search-status" role="status" aria-live="polite"></p>
+      <p id="api-config-status" class="muted" role="status">Checking local API configuration without contacting providers…</p>
     </section>
     <section class="panel" aria-labelledby="assistant-title">
       <h2 id="assistant-title">Natural-language shopping commands</h2>
@@ -59,6 +60,25 @@
       </form>
       <p id="compare-status" role="status" aria-live="polite"></p>
       <div class="scroll"><table><thead><tr><th>Product</th><th>Merchant</th><th>Price</th><th>Freshness</th><th>Assessment</th></tr></thead><tbody id="comparison-body"></tbody></table></div>
+    </section>
+    <section aria-labelledby="learning-title" class="panel">
+      <h2 id="learning-title">Opt-in local learning</h2>
+      <p class="muted">Remember explicit product likes/dislikes on this device only. Google Shopping results use the existing SerpApi adapter and remain source-attributed observations, never instructions. This is preference ranking, not model retraining or automatic website scraping.</p>
+      <p id="learning-status" role="status" aria-live="polite">Checking local learning status…</p>
+      <div class="fields">
+        <button id="learning-enable" type="button">Enable preferences</button>
+        <button id="learning-disable" type="button">Pause preferences</button>
+        <button id="learning-clear" type="button">Erase my preferences</button>
+      </div>
+      <p id="learning-selected" class="muted">Select an observed offer below to give feedback.</p>
+      <div class="fields">
+        <button id="learning-prefer" type="button">Prefer selected offer</button>
+        <button id="learning-avoid" type="button">Avoid selected offer</button>
+        <button id="learning-forget" type="button">Forget selected offer</button>
+      </div>
+      <p id="learning-feedback-status" role="status" aria-live="polite"></p>
+      <p class="muted">Feedback never changes prices, stock, deal verdicts, or source evidence. To review personalized ordering, run “Compare stored offers” after saving preferences. Clearing deletes feedback only, not historical price observations.</p>
+      <p id="learning-ranked" class="muted">Personalized order appears here after comparison when learning is enabled.</p>
     </section>
     <section aria-labelledby="watch-title" class="panel">
       <h2 id="watch-title">Watchlist &amp; opt-in alerts</h2>
