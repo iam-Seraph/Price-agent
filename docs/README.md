@@ -10,7 +10,7 @@ Start at the [repository README](../README.md) for current setup, features and C
 - [Backend implementation](../backend/README.md) — modules, database, API and tests.
 - [Static site](../site/README.md) — portfolio/demo website.
 
-## Architecture and audit
+- [Offline end-to-end validation](guides/offline-validation.md) — full automated check command, test coverage and live-service limitations.\n\n## Architecture and audit
 
 - [Single-operator security boundary](architecture/single-operator-security.md) — no real authentication or tenant isolation yet.
 - [Historical hardening audit](audits/legacy-hardening.md) — preserved early benchmarks and limitations; treat early status statements as historical.

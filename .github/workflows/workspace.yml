@@ -11,7 +11,7 @@ on:
       - "README.md"
       - "docs/**"
       - "site/**"
-      - "scripts/check_doc_links.py"
+      - "scripts/**"
   pull_request:
     paths:
       - "backend/**"
@@ -22,7 +22,7 @@ on:
       - "README.md"
       - "docs/**"
       - "site/**"
-      - "scripts/check_doc_links.py"
+      - "scripts/**"
 jobs:
   offline-regression:
     runs-on: ubuntu-latest
@@ -31,25 +31,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Check local documentation links
-        run: python scripts/check_doc_links.py
       - name: Install full workspace test requirements
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r backend/requirements-workspace.txt -r backend/requirements-dev.txt
-      - name: Run original and workspace regression suites
-        working-directory: backend
-        run: python -m pytest -q tests
-      - name: Compile Python sources
-        run: python -m compileall -q price_agent.py live_price.py price_agent_workspace.py src backend/price_engine backend/tests
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Check JavaScript syntax
-        run: |
-          node --check backend/price_engine/static/intelligence.js
-          node --check backend/price_engine/static/intelligence.worker.js
-          node --check backend/price_engine/static/verified.js
-          node --check site/script.js
-      - name: Test virtual product generator and search
-        run: node --test backend/tests/test_intelligence_worker.cjs
+      - name: Run complete offline release validation
+        run: python scripts/full_check.py
