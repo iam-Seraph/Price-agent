@@ -19,6 +19,10 @@ on:
       - "src/**"
       - "data/**"
       - ".github/workflows/workspace.yml"
+      - "README.md"
+      - "docs/**"
+      - "site/**"
+      - "scripts/check_doc_links.py"
 jobs:
   offline-regression:
     runs-on: ubuntu-latest

@@ -2,7 +2,7 @@
 
 **Local-first Python price research and experimentation toolkit.** This repository contains a source-attributed SerpApi/SQLite offer pipeline, price history and watch tools, an optional Groq explanation layer, an Open Food Facts product-identity catalog, and separate **clearly labeled mock/simulated** demos.
 
-**Status — 19 November 2026:** Engineering checkpoints **1–100 (Phases 1–10)** are merged into `main`. These are development milestones, **not 100 continuously running autonomous agents**. Offline GitHub Actions regression workflows passed for the Phase 10 merge. **Not production-ready, not multi-user, and not a independently verified retailer-price service.**
+**Status — 19 November 2026:** Engineering checkpoints **1–100 (Phases 1–10)** are merged into `main`. These are development milestones, **not 100 continuously running autonomous agents**. Offline GitHub Actions regression workflows passed for the Phase 10 merge. **Not production-ready, not multi-user, and not an independently verified retailer-price service.**
 
 ## Start here — local verified-offer dashboard
 
