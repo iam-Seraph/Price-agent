@@ -6,6 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from .money import format_minor, minor_units, validate_currency
+from .analysis import analyze_offer
 from .store import VerifiedPriceStore
 
 
@@ -28,7 +29,12 @@ def research_offers(store: VerifiedPriceStore, query: str, budget: str | int | D
         candidate = bool(freshness == "FRESH" and stock == "IN_STOCK"
                          and int(row["price_minor"]) <= budget_minor
                          and row["provenance"] == "PROVIDER_REPORTED")
+        verdict = analyze_offer(store, str(row["offer_id"]), budget, now=clock)
         output.append({
+            "historical_deal": verdict["decision"],
+            "sample_count_30d": verdict["sample_count_30d"],
+            "unique_days_30d": verdict["unique_days_30d"],
+            "unmet_deal_checks": verdict["failed_checks"],
             "offer_id": str(row["offer_id"]),
             "provider_product_id": str(row["provider_product_id"]),
             "title": str(row["title"]), "merchant": str(row["merchant"]),
