@@ -1,4 +1,4 @@
-"""Read-only real-provider offer routes for the existing local workspace."""
+"""Explicit local write actions plus source-grounded read APIs."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -45,7 +45,7 @@ TEMPLATES = Jinja2Templates(
 
 
 def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
-    """Install read-only endpoints; no retailer fetch is triggered by a GET."""
+    """Install local opt-in endpoints; GET requests never fetch retailer prices."""
     store = VerifiedPriceStore(db_path)
     search_lock = Lock()
     last_search = [0.0]
@@ -90,7 +90,7 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
     @app.post("/api/verified/watches", status_code=201)
     def create_verified_watch(body: WatchCreateRequest):
         try:
-            if len(watches.list_watches(limit=101)) >= 100:
+            if watches.active_watch_count() >= 100:
                 raise HTTPException(status_code=429, detail="Local watchlist capacity reached")
             watch_id = watches.add_watch(body.query, body.budget,
                                         body.currency, body.interval_minutes)
