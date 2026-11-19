@@ -11,6 +11,8 @@ Start at the [repository README](../README.md) for current setup, features and C
 - [Static site](../site/README.md) — portfolio/demo website.
 - [Offline end-to-end validation](guides/offline-validation.md) — full automated check command, test coverage and live-service limitations.
 
+- [Phase 11 — API configuration and controlled learning](phases/phase-11-configuration-and-learning.md) — opt-in preferences, source evidence separation and key setup.
+
 ## Architecture and audit
 
 - [Single-operator security boundary](architecture/single-operator-security.md) — no real authentication or tenant isolation yet.

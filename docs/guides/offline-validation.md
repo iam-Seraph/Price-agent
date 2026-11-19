@@ -11,6 +11,8 @@ python -m pip install -r backend/requirements-workspace.txt -r backend/requireme
 python scripts/full_check.py
 ~~~
 
+Phase 11 adds offline tests for explicit preference consent, source-truth separation, deletion, ranking eligibility, safe configuration reporting and same-origin HTTP writes.
+
 The script runs **all** of these, even if one fails: Markdown link validation; `pytest` and `unittest` discovery for `backend/tests/`; compilation of the root Python launchers, backend and scripts; JS syntax checks for Intelligence Studio, verified UI and static website; and the Node.js Web Worker test suite. It prints a per-step result and exits nonzero if any step fails. The same command runs in GitHub's Workspace regression workflow.
 
 ## End-to-end smoke path

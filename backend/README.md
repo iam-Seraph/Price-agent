@@ -1,6 +1,6 @@
 # Price Agent — backend and local dashboards
 
-**Current scope (Phases 1–10, loops 1–100):** The local workspace includes source-attributed SerpApi offers, verified-offer research and comparison, opt-in watches and alerts, deterministic command planning, historical intelligence and a SQLite integrity audit. These features are **not** evidence that retailer prices are independently confirmed or that the local app is safe for public deployment.
+**Current scope (Phases 1–10, loops 1–100, plus Phase 11 opt-in preferences/configuration):** The local workspace includes source-attributed SerpApi offers, verified-offer research and comparison, opt-in watches and alerts, deterministic command planning, historical intelligence and a SQLite integrity audit. These features are **not** evidence that retailer prices are independently confirmed or that the local app is safe for public deployment.
 
 The backend uses Python 3.11+, asyncio, `httpx` (optional, policy-gated
 retailer HTTP transport), BeautifulSoup for JSON-LD parsing, and SQLite with
@@ -209,3 +209,12 @@ Read the [root README](../README.md) for a unified quick start,
 Launch the complete local UI using `python -m price_engine.workspace` from `backend/`, as shown in the [root quick start](../README.md). Open `/verified` for previously stored provider offers and operator-initiated lookups. Related read/diagnostic routes include `GET /api/verified/research`, `GET /api/verified/offers/{offer_id}/intelligence`, and `GET /api/verified/diagnostics`. The `/intelligence` virtual catalog is explicitly fictional and separate.
 
 From the repository root, `real_price_agent.py`, `price_watch.py`, `price_alert.py`, `price_research.py`, `price_assistant.py`, `price_intelligence.py`, and `price_audit.py` remain stable compatibility entry points. See the [feature phases](../docs/README.md) for detailed commands and the [single-operator security boundary](../docs/architecture/single-operator-security.md). Historical test counts and phase references above describe their original PRs; the newer phases add more tests.
+
+
+## Phase 11: local-only learning and credential configuration
+
+The `verified.learning.LearningStore` manages the additive `migrations/006_learning.sql` schema. Feedback is **disabled by default**, only two enum votes (`PREFER`/`AVOID`) are accepted, and each vote must reference an existing source-linked offer ID. User input does not become a website fact or a model instruction. User preferences can be paused, deleted individually or erased together, with explicit confirmation. The original append-only provider observation rows remain untouched.
+
+`verified.configuration.configuration_status` safely checks **presence only** of SerpApi, Groq, OpenAI-alternative, SMTP and Telegram credentials. There are no outbound health probes, values in responses, remote credential validation or model-weight training.
+
+New local API endpoints: `GET /api/verified/configuration`, `GET /api/verified/learning`; `POST /api/verified/learning/opt-in`, `/feedback`, `/forget` and `/clear`. POST calls are protected by existing strict same-origin middleware and settings/clear require a `confirmed: true` flag. `GET /api/verified/research` now exposes a **separate** `personalization.ranked_offer_ids` list; objective price ranking, budget evidence checks and historical deal verdicts remain unchanged. Use `price_learning.py` and `price_config.py` as root entry points. Documented behavior and privacy boundaries are in the [Phase 11 guide](../docs/phases/phase-11-configuration-and-learning.md).
