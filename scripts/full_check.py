@@ -28,7 +28,7 @@ def main() -> int:
           "price_agent.py", "real_price_agent.py", "live_price.py",
           "price_agent_workspace.py", "price_watch.py", "price_alert.py",
           "price_research.py", "price_assistant.py", "price_intelligence.py",
-          "price_audit.py", "price_config.py", "price_learning.py",
+          "price_audit.py", "price_config.py", "price_learning.py", "price_demo.py",
           "src", "backend/price_engine", "backend/tests", "scripts"],
          ROOT),
         ("Studio JS syntax", ["node", "--check",
@@ -37,9 +37,12 @@ def main() -> int:
                                      "backend/price_engine/static/intelligence.worker.js"], ROOT),
         ("Verified UI JS syntax", ["node", "--check",
                                     "backend/price_engine/static/verified.js"], ROOT),
+        ("Offline demo UI JS syntax", ["node", "--check",
+                                      "backend/price_engine/static/demo.js"], ROOT),
         ("Static site JS syntax", ["node", "--check", "site/script.js"], ROOT),
         ("Studio Node worker tests",
          ["node", "--test", "backend/tests/test_intelligence_worker.cjs"], ROOT),
+        ("Offline demo CLI smoke", [python, "price_demo.py", "smoke"], ROOT),
     ]
     failed: list[str] = []
     for title, argv, cwd in checks:

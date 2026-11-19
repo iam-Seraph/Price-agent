@@ -4,6 +4,29 @@
 
 **Status — 20 November 2026:** Engineering checkpoints **1–100 (Phases 1–10)** remain complete, with a **Phase 11 configuration and opt-in local learning extension**. Milestones are not continuously running autonomous agents. CI tests are offline. **Not production-ready, multi-user or an independently verified retailer-price service.**
 
+## Fully offline demo — all features, zero API keys
+
+Install Python 3.11+ and project dependencies once (installation itself may require internet). Then start the entirely fictional simulator from the repository root:
+
+~~~bash
+python -m pip install -r backend/requirements-workspace.txt -r backend/requirements-dev.txt
+python price_demo.py
+~~~
+
+Open **http://127.0.0.1:8000/demo**. Try fictional store searches, cross-seller comparisons, synthetic price history and deal checks, charts, deterministic stand-in explanations, supported shopping commands, opt-in watches, manually simulated polling, fake email/Telegram receipts, user preference learning, and a bundled demo catalog. The existing offline file workspace and Virtual Intelligence Studio are accessible via the navigation links.
+
+No SerpApi/Groq keys or network are required **after packages are installed**. These simulations do not call Google, AI providers or messaging services. An isolated, ignored .price-agent-demo/ folder holds three separate demo SQLite databases, **not** tracker.sqlite3. Every fake observation is marked DEMO_FIXTURE, never PROVIDER_REPORTED. In demo mode, the real Google Shopping API is blocked even when a credential exists.
+
+~~~bash
+# Validate all offline demo features against temporary files
+python price_demo.py smoke
+
+# Check entire project including the demo
+python scripts/full_check.py
+~~~
+
+See the [complete offline demo guide](docs/guides/full-offline-demo.md). External live data, actual AI inference, and real messaging are **simulated**, not magically reproduced without internet.
+
 ## Start here — local verified-offer dashboard
 
 Requires **Python 3.11+**. From the repository root:
@@ -26,6 +49,7 @@ Open the **local-only** pages:
 | URL | Data provenance | Function |
 | --- | --- | --- |
 | `/verified` | Source-attributed, *provider-reported* offers saved in SQLite | Offer lookup, saved research, historical intelligence, watches, assistant planner and diagnostics |
+| `/demo` | Fully fictional DEMO_FIXTURE records isolated from live offers | Full demo: search, research, watches, alerts, learning and diagnostics |
 | `/` | Local legacy demo/history | Read-only historical observation dashboard |
 | `/catalog` | Imported Open Food Facts identities, **no retailer prices** | Product catalog search |
 | `/workspace` | Synthetic/uploaded datasets; optional provider research | Personal CSV/JSON/XLSX workspace |

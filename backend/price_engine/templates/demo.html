@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Price Agent · Fully Offline Simulation</title>
+  <link rel="stylesheet" href="/static/verified.css">
+  <script defer src="/static/demo.js"></script>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">OFFLINE DEMO · SYNTHETIC FIXTURES ONLY</p>
+      <h1>Price Agent · No API keys needed</h1>
+      <p class="muted">Every price, store, alert and past price below is fictional. Nothing calls Google, Groq, email or Telegram.</p>
+    </div>
+    <nav aria-label="App sections">
+      <a href="/demo">Demo dashboard</a>
+      <a href="/workspace">Offline uploads & workspace</a>
+      <a href="/intelligence">Virtual Intelligence Studio</a>
+      <a href="/catalog">Imported catalog (if available)</a>
+      <a href="/">Legacy history</a>
+    </nav>
+  </header>
+  <main>
+    <section class="panel" aria-labelledby="status-title">
+      <h2 id="status-title">Offline runtime and diagnostics</h2>
+      <div class="metrics">
+        <div><strong id="status-products">—</strong><span>Fictional retailer offers</span></div>
+        <div><strong id="status-samples">—</strong><span>Simulated historical prices</span></div>
+        <div><strong id="status-tick">—</strong><span>Explicit simulation cycles</span></div>
+      </div>
+      <p id="runtime-message" role="status" aria-live="polite">Loading offline fixtures…</p>
+      <div class="fields">
+        <button type="button" id="audit-run">Audit demo database</button>
+        <button type="button" id="config-run">Check offline configuration</button>
+      </div>
+      <pre class="command-preview" id="runtime-details"></pre>
+    </section>
+
+    <section class="panel" aria-labelledby="search-title">
+      <h2 id="search-title">Search and compare fictional store offers</h2>
+      <p class="muted">Sample products are loaded from bundled data/demo_products.json, with extra fictional sellers for comparing listings. This does not retrieve live prices.</p>
+      <form id="search-form">
+        <label for="search-query">Fictional product name</label>
+        <div class="fields">
+          <input id="search-query" type="search" minlength="2" maxlength="120" value="headphones" required>
+          <input id="search-budget" type="text" inputmode="decimal" value="4000" maxlength="30" aria-label="Budget in INR" required>
+          <button type="submit">Compare offline offers</button>
+        </div>
+      </form>
+      <p id="search-status" role="status" aria-live="polite"></p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Fictional product</th><th>Fictional seller</th><th>Simulated price</th><th>Stock</th><th>User preference</th><th>Details</th></tr></thead>
+          <tbody id="offers-body"></tbody>
+        </table>
+      </div>
+      <p id="personalized-order" class="muted">Enable learning and rate an offer to see personalized ordering.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="history-title">
+      <h2 id="history-title">History, demo discount checks and explanations</h2>
+      <p id="selected-offer" class="muted">Select an offer above.</p>
+      <canvas id="demo-chart" width="740" height="230" role="img" aria-label="Synthetic historical prices"></canvas>
+      <pre class="command-preview" id="analysis-output" role="status" aria-live="polite">Select an offer to analyze its fictional history.</pre>
+      <p class="muted">The offline explanation is rule-based, not a response from Groq or OpenAI. Fake-discount flags in this demo cannot establish real seller behavior.</p>
+    </section>
+
+    <div class="columns">
+      <section class="panel" aria-labelledby="watch-title">
+        <h2 id="watch-title">Watch and monitor · simulated</h2>
+        <p class="muted">Set a fictional price threshold; monitoring advances only when you press the poll button. No continuous background jobs.</p>
+        <form id="watch-form">
+          <label for="watch-query">Product to track</label>
+          <div class="fields">
+            <input id="watch-query" type="text" minlength="2" maxlength="120" value="headphones" required>
+            <input id="watch-budget" type="text" inputmode="decimal" value="4000" aria-label="Threshold in INR" required>
+            <select id="watch-channel" aria-label="Simulated notification method">
+              <option value="SIMULATED_EMAIL">Simulated email</option>
+              <option value="SIMULATED_TELEGRAM">Simulated Telegram</option>
+            </select>
+            <button type="submit">Create demo watch</button>
+          </div>
+        </form>
+        <div class="fields">
+          <button type="button" id="poll-run">Run one offline monitoring cycle</button>
+          <button type="button" id="dispatch-run">Simulate alert delivery</button>
+        </div>
+        <p id="watch-status" role="status" aria-live="polite"></p>
+        <h3>Watch rules</h3>
+        <div class="scroll"><table><thead><tr><th>Query</th><th>Threshold (INR)</th><th>Channel</th><th>Action</th></tr></thead><tbody id="watches-body"></tbody></table></div>
+        <h3>Simulated notification receipts</h3>
+        <div class="scroll"><table><thead><tr><th>Fictional product</th><th>Price</th><th>Channel</th><th>Status</th></tr></thead><tbody id="alerts-body"></tbody></table></div>
+      </section>
+
+      <section class="panel" aria-labelledby="learning-title">
+        <h2 id="learning-title">Opt-in learning · demo preferences</h2>
+        <p class="muted">Only explicit PREFER/AVOID votes are remembered in the demo database. Clearing affects feedback, never fabricated price history. No model is trained.</p>
+        <p id="learning-status" role="status" aria-live="polite"></p>
+        <div class="fields">
+          <button type="button" id="learning-on">Enable learning</button>
+          <button type="button" id="learning-off">Pause learning</button>
+          <button type="button" id="learning-clear">Erase demo feedback</button>
+        </div>
+        <div class="fields">
+          <button type="button" id="prefer-selected">Prefer selected</button>
+          <button type="button" id="avoid-selected">Avoid selected</button>
+          <button type="button" id="forget-selected">Forget selected</button>
+        </div>
+        <p id="feedback-status" role="status" aria-live="polite"></p>
+        <h3>Demo command assistant</h3>
+        <p class="muted">Examples: “compare headphones under ₹4000”, “watch keyboard below ₹5000”. Explicit confirmation is required to save a watch.</p>
+        <form id="assistant-form">
+          <label for="assistant-command">One supported command</label>
+          <div class="fields">
+            <input id="assistant-command" type="text" minlength="8" maxlength="250" value="compare headphones under ₹4000" required>
+            <button type="submit">Run offline command</button>
+          </div>
+        </form>
+        <pre class="command-preview" id="assistant-output"></pre>
+      </section>
+    </div>
+
+    <section class="panel" aria-labelledby="catalog-title">
+      <h2 id="catalog-title">Bundled sample product catalog</h2>
+      <p class="muted">Fictional catalog entries; not Open Food Facts or verified store inventory. Real Open Food Facts imports need a separately obtained dataset.</p>
+      <div class="scroll"><table><thead><tr><th>Product</th><th>Demo retailer</th><th>Sample price</th><th>Attributes</th></tr></thead><tbody id="catalog-body"></tbody></table></div>
+    </section>
+  </main>
+  <footer>OFFLINE DEMO / DEMO_FIXTURE. This is a local, single-operator educational simulation; never use sample quotes as real shopping evidence.</footer>
+</body>
+</html>

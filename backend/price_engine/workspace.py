@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from .product_lookup import lookup_product
 from .workspace_data import MAX_UPLOAD_BYTES, WorkspaceStore, parse_upload
 from .verified.api import register_verified_routes
+from .offline_api import register_demo_routes
 
 _PACKAGE = Path(__file__).resolve().parent
 _TEMPLATES = Jinja2Templates(directory=str(_PACKAGE / "templates"))
@@ -31,7 +32,8 @@ class LookupRequest(BaseModel):
     query: str = Field(min_length=2, max_length=120)
 
 
-def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
+def register_workspace_routes(app: FastAPI, workspace_db: str | Path, *,
+                              offline_only: bool = False) -> None:
     store = WorkspaceStore(workspace_db)
     # The workspace accepts local writes, so reject DNS-rebinding Host headers.
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]", "testserver"])
@@ -41,9 +43,17 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
         # Local, unauthenticated development server: block cross-site browser writes.
         is_workspace = request.url.path.startswith("/api/workspace/")
         is_verified = request.url.path.startswith("/api/verified/")
-        if request.method == "POST" and (is_workspace or is_verified):
+        is_demo = request.url.path.startswith("/api/demo/")
+        if offline_only and request.url.path == "/verified" and request.method == "GET":
+            return RedirectResponse(url="/demo", status_code=307)
+        # Strict offline mode rejects the only verified route that calls
+        # a real search provider, even if API keys are present in the environment.
+        if offline_only and request.url.path == "/api/verified/search":
+            return JSONResponse({"detail": "External search disabled in offline demo; use /demo"},
+                                status_code=409)
+        if request.method == "POST" and (is_workspace or is_verified or is_demo):
             origin = request.headers.get("origin")
-            if is_verified and not origin:
+            if (is_verified or is_demo) and not origin:
                 return JSONResponse({"detail": "Origin header required for local write"}, status_code=403)
             if request.headers.get("sec-fetch-site") == "cross-site":
                 return JSONResponse({"detail": "Cross-site writes are disabled"}, status_code=403)
@@ -54,12 +64,13 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
                         or parsed.hostname not in {"127.0.0.1", "localhost", "::1", "testserver"}):
                     return JSONResponse({"detail": "Cross-origin writes are disabled"}, status_code=403)
         response = await call_next(request)
-        if request.url.path == "/verified" or request.url.path.startswith("/api/verified/"):
+        if (request.url.path in ("/verified", "/demo")
+                or request.url.path.startswith(("/api/verified/", "/api/demo/"))):
             response.headers["Cache-Control"] = "no-store"
             response.headers["X-Content-Type-Options"] = "nosniff"
             response.headers["X-Frame-Options"] = "DENY"
             response.headers["Referrer-Policy"] = "no-referrer"
-            if request.url.path == "/verified":
+            if request.url.path in ("/verified", "/demo"):
                 response.headers["Content-Security-Policy"] = (
                     "default-src 'self'; script-src 'self'; style-src 'self'; "
                     "img-src 'self' data:; connect-src 'self'; object-src 'none'; "
@@ -115,7 +126,7 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
     @app.post("/api/workspace/agent/lookup")
     def agent_lookup(body: LookupRequest):
         try:
-            result = lookup_product(body.query)
+            result = lookup_product(body.query, offline_only=offline_only)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         result["active_dataset"] = store.stats()["active"]
@@ -124,14 +135,27 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
         return result
 
 
-def create_app(history_db: str | Path, workspace_db: str | Path = "workspace.sqlite3") -> FastAPI:
+def create_app(history_db: str | Path, workspace_db: str | Path = "workspace.sqlite3",
+               *, offline_only: bool = False,
+               demo_db: str | Path | None = None) -> FastAPI:
     from .dashboard import create_app as existing_dashboard
     if Path(history_db).resolve() == Path(workspace_db).resolve():
         raise ValueError("Workspace database must differ from the history database")
+    if offline_only:
+        if demo_db is None:
+            raise ValueError("Offline mode requires a separate synthetic demo database")
+        if Path(demo_db).resolve() in (Path(history_db).resolve(),
+                                      Path(workspace_db).resolve()):
+            raise ValueError("Synthetic demo data must use its own isolated database")
+    elif demo_db is not None:
+        raise ValueError("Demo database can only be used in explicit offline mode")
     load_dotenv(REPO_ROOT / ".env", override=False)
     app = existing_dashboard(history_db)
-    register_workspace_routes(app, workspace_db)
+    register_workspace_routes(app, workspace_db, offline_only=offline_only)
     register_verified_routes(app, history_db)
+    if offline_only:
+        assert demo_db is not None
+        register_demo_routes(app, demo_db)
     return app
 
 
