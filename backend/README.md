@@ -218,3 +218,8 @@ The `verified.learning.LearningStore` manages the additive `migrations/006_learn
 `verified.configuration.configuration_status` safely checks **presence only** of SerpApi, Groq, OpenAI-alternative, SMTP and Telegram credentials. There are no outbound health probes, values in responses, remote credential validation or model-weight training.
 
 New local API endpoints: `GET /api/verified/configuration`, `GET /api/verified/learning`; `POST /api/verified/learning/opt-in`, `/feedback`, `/forget` and `/clear`. POST calls are protected by existing strict same-origin middleware and settings/clear require a `confirmed: true` flag. `GET /api/verified/research` now exposes a **separate** `personalization.ranked_offer_ids` list; objective price ranking, budget evidence checks and historical deal verdicts remain unchanged. Use `price_learning.py` and `price_config.py` as root entry points. Documented behavior and privacy boundaries are in the [Phase 11 guide](../docs/phases/phase-11-configuration-and-learning.md).
+
+
+## Fully offline simulated workspace
+
+From repository root run `python price_demo.py` and open `http://127.0.0.1:8000/demo`. This launches local-only fictional price search, comparison, history, rule-based explanatory stand-ins, watch polling, simulated alerts, preference feedback, diagnostics, bundled catalog and links to workspace uploads and Intelligence Studio. The three demo SQLite files are separate from real tracking data. Live provider searches are blocked in demo mode regardless of keys. Validate with `python price_demo.py smoke` or `python scripts/full_check.py`. See [full offline demo guide](../docs/guides/full-offline-demo.md).
