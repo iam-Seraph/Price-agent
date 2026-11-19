@@ -19,6 +19,8 @@ from .explanations import explain_candidates
 from .provider import ProviderUnavailable, search_serpapi
 
 from .analysis import analyze_offer
+from .intelligence import daily_series, detect_price_anomaly, price_trend
+from .quality import evidence_quality
 from .alert_store import AlertStore
 from .store import VerifiedPriceStore
 from .watch_store import WatchStore
@@ -190,6 +192,22 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
         return {"offer_id": offer_id, "currency": store.offer(offer_id)["currency"],
                 "observations": store.history(offer_id, days=days, limit=limit),
                 "provenance": "PROVIDER_REPORTED"}
+
+    @app.get("/api/verified/offers/{offer_id}/intelligence")
+    def verified_offer_intelligence(offer_id: str, days: int = Query(90, ge=1, le=365)):
+        """Read only stored provider evidence; no live query or prediction."""
+        if store.offer(offer_id) is None:
+            raise HTTPException(status_code=404, detail="Stored offer not found")
+        try:
+            return {
+                "series": daily_series(store, offer_id, days=days),
+                "anomaly": detect_price_anomaly(store, offer_id),
+                "trend": price_trend(store, offer_id),
+                "evidence": evidence_quality(store, offer_id),
+                "provider_requests": 0,
+            }
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get("/api/verified/offers/{offer_id}/analysis")
     def verified_offer_analysis(offer_id: str, budget: str = Query(..., min_length=1, max_length=30),
