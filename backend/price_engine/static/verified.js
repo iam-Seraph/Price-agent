@@ -290,3 +290,45 @@ $("watch-form").addEventListener("submit", async event => {
 });
 
 refreshWatches();
+
+
+$("compare-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const query = $("compare-query").value.trim();
+  const budget = $("compare-budget").value.trim();
+  const currency = $("compare-currency").value;
+  if (query.length < 2 || query.length > 120 || !validBudget(budget)) {
+    showMessage("compare-status", "Enter a valid search term and price threshold.");
+    return;
+  }
+  const url = "/api/verified/research?q=" + encodeURIComponent(query) +
+      "&budget=" + encodeURIComponent(budget) +
+      "&currency=" + encodeURIComponent(currency) + "&limit=30";
+  try {
+    const result = await api(url);
+    const rows = result.comparison.rows, tbody = $("comparison-body");
+    tbody.replaceChildren();
+    const byId = new Map(result.explanations.results.map(x => [x.offer_id, x]));
+    for (const offer of rows) {
+      const tr = document.createElement("tr");
+      cell(tr, offer.title);
+      cell(tr, offer.merchant);
+      cell(tr, offer.price_display);
+      cell(tr, offer.freshness);
+      const details = byId.get(offer.offer_id);
+      cell(tr, details ? details.research_class.replaceAll("_", " ") : "Unknown");
+      tbody.appendChild(tr);
+    }
+    if (rows.length === 0) {
+      const tr = document.createElement("tr"), td = document.createElement("td");
+      td.colSpan = 5;
+      td.textContent = "No matching source-attributed offers are stored yet.";
+      tr.appendChild(td); tbody.appendChild(tr);
+    }
+    showMessage("compare-status", "Found " + rows.length + " source-attributed listings from " +
+      result.comparison.merchant_count + " merchants. Prices are NOT guaranteed for equivalent variants.");
+  } catch (error) {
+    $("comparison-body").replaceChildren();
+    showMessage("compare-status", "Comparison unavailable: " + error.message);
+  }
+});
