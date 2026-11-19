@@ -19,6 +19,7 @@ from .explanations import explain_candidates
 from .provider import ProviderUnavailable, search_serpapi
 
 from .analysis import analyze_offer
+from .audit import audit_store
 from .intelligence import daily_series, detect_price_anomaly, price_trend
 from .quality import evidence_quality
 from .alert_store import AlertStore
@@ -126,6 +127,18 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
             return execute_command(db_path, body.command, confirmed=body.confirmed)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.get("/api/verified/diagnostics")
+    def verified_diagnostics():
+        """On-demand source-database integrity snapshot; no external requests."""
+        try:
+            return audit_store(store)
+        except Exception as exc:
+            # Do not expose SQLite paths or SQL statements over HTTP.
+            import sqlite3
+            if isinstance(exc, (sqlite3.DatabaseError, OSError)):
+                raise HTTPException(status_code=503, detail="Local evidence database unavailable") from exc
+            raise
 
     @app.get("/api/verified/status")
     def verified_status():

@@ -218,3 +218,10 @@ when `main` changes. It excludes ignored local databases, API keys,
 downloaded bulk Open Food Facts exports and other untracked files.
 GitHub Actions artifacts have limited retention (14 days here);
 the separate Google Drive archive is the longer-lived offsite copy.
+
+
+## Historical intelligence and local release audit (Loops 81–100)
+
+For persisted provider offers, use `python price_intelligence.py OFFER_ID --db tracker.sqlite3` to inspect recorded daily medians, anomaly heuristics, evidence completeness and past trends. Use `python price_audit.py --db tracker.sqlite3` to run local SQLite integrity and provenance checks.
+
+The local dashboard at `http://127.0.0.1:8000/verified` displays source-backed summaries. Read [Phase 9](PHASE9_CHECKPOINT.md), [Phase 10](PHASE10_CHECKPOINT.md) and the [single-operator security boundary](TENANCY_DESIGN.md) for remaining limitations. The service is NOT authenticated, multi-tenant or production-ready; no merchant trust is inferred and future prices are not forecast.

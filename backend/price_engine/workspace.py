@@ -50,7 +50,18 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
                         or parsed.netloc != request.headers.get("host")
                         or parsed.hostname not in {"127.0.0.1", "localhost", "::1", "testserver"}):
                     return JSONResponse({"detail": "Cross-origin writes are disabled"}, status_code=403)
-        return await call_next(request)
+        response = await call_next(request)
+        if request.url.path == "/verified" or request.url.path.startswith("/api/verified/"):
+            response.headers["Cache-Control"] = "no-store"
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["Referrer-Policy"] = "no-referrer"
+            if request.url.path == "/verified":
+                response.headers["Content-Security-Policy"] = (
+                    "default-src 'self'; script-src 'self'; style-src 'self'; "
+                    "img-src 'self' data:; connect-src 'self'; object-src 'none'; "
+                    "base-uri 'none'; frame-ancestors 'none'")
+        return response
 
     @app.get("/workspace", response_class=HTMLResponse)
     def workspace_page(request: Request):

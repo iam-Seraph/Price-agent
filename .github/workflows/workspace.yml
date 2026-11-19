@@ -39,5 +39,6 @@ jobs:
         run: |
           node --check backend/price_engine/static/intelligence.js
           node --check backend/price_engine/static/intelligence.worker.js
+          node --check backend/price_engine/static/verified.js
       - name: Test virtual product generator and search
         run: node --test backend/tests/test_intelligence_worker.cjs
