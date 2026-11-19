@@ -56,15 +56,15 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
     def workspace_page(request: Request):
         return _TEMPLATES.TemplateResponse(request, "workspace.html", {})
 
-    @app.get("/intelligence")
-    def intelligence_page():
-        """Primary Intelligence view now uses actual persisted provider observations."""
-        return RedirectResponse(url="/verified", status_code=307)
-
-    @app.get("/simulation", response_class=HTMLResponse)
-    def legacy_simulation_page(request: Request):
-        """Explicitly labeled historical fictional UI, never used for real decisions."""
+    @app.get("/intelligence", response_class=HTMLResponse)
+    def intelligence_page(request: Request):
+        """Preserve the explicitly labeled legacy simulator for existing users."""
         return _TEMPLATES.TemplateResponse(request, "intelligence.html", {})
+
+    @app.get("/simulation")
+    def simulation_alias():
+        """Optional explicit route for the fictional Intelligence Studio."""
+        return RedirectResponse(url="/intelligence", status_code=307)
 
     @app.get("/api/workspace/status")
     def status():
