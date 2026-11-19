@@ -53,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
                 print("Starting opt-in price monitor. Ctrl+C stops it.", flush=True)
                 try:
                     while True:
-                        result = {"runs": run_due_once(store, limit=args.batch_size)}
+                        result = {"runs": run_due_once(store, limit=args.batch_size, alerts=alert_store)}
                         print(json.dumps(result, ensure_ascii=False), flush=True)
                         time.sleep(args.sleep_seconds)
                 except KeyboardInterrupt:

@@ -17,7 +17,7 @@ def audit_store(store: VerifiedPriceStore, *, now: datetime | None = None) -> di
         raise ValueError("Audit timestamp must be timezone-aware")
     future_limit = (clock.astimezone(timezone.utc) + timedelta(minutes=5)).isoformat(
         timespec="microseconds").replace("+00:00", "Z")
-    with store.connect() as db:
+    with store.connect_readonly() as db:
         integrity = str(db.execute("PRAGMA quick_check(1)").fetchone()[0])
         foreign_keys = db.execute("PRAGMA foreign_key_check").fetchmany(10)
         counts = db.execute("""

@@ -24,7 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     selector.add_argument("--query", help="Search Google Shopping through SerpApi")
     selector.add_argument("--offer-id", help="Analyze an already persisted offer")
     selector.add_argument("--list", action="store_true", help="List offers already stored")
-    parser.add_argument("--db", default="price-agent.sqlite3")
+    parser.add_argument("--db", default="tracker.sqlite3")
     parser.add_argument("--budget", help="Budget in the explicitly selected currency")
     parser.add_argument("--currency", choices=("INR", "USD"), default="INR")
     parser.add_argument("--limit", type=int, default=5)
