@@ -27,6 +27,10 @@ class AssistantCommandRequest(BaseModel):
     command: str = Field(min_length=8, max_length=250)
 
 
+class AssistantExecuteRequest(AssistantCommandRequest):
+    confirmed: bool = False
+
+
 class VerifiedSearchRequest(BaseModel):
     query: str = Field(min_length=2, max_length=120)
     budget: str = Field(min_length=1, max_length=30)
@@ -110,6 +114,14 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
         """Show a deterministic plan without writing or contacting providers."""
         try:
             return plan_command(body.command)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/verified/assistant/execute")
+    def assistant_execute(body: AssistantExecuteRequest):
+        """Execute only supported commands; watch creation needs explicit consent."""
+        try:
+            return execute_command(db_path, body.command, confirmed=body.confirmed)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
