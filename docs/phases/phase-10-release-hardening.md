@@ -27,7 +27,7 @@ The main workspace CI checks verified.js as well as the existing Intelligence St
 Test empty and populated databases, simulated impossible future evidence, unavailable database, CLI status, diagnostics, headers and cross-site protections.
 
 --- LOOP [99]: Multi-user readiness boundary ---
-Document the single-operator design and a concrete authentication/tenant-isolation migration plan in TENANCY_DESIGN.md. A multi-user product is NOT implemented.
+Document the single-operator design and a concrete authentication/tenant-isolation migration plan in [the single-operator security plan](../architecture/single-operator-security.md). A multi-user product is NOT implemented.
 
 --- LOOP [100]: Final audit and merge gate ---
 Run GitHub Actions, inspect CI status and tracked-file diff, and merge only if checks pass. Record unverified provider behavior and production blockers.
@@ -47,4 +47,4 @@ Run GitHub Actions, inspect CI status and tracked-file diff, and merge only if c
 - Secrets must live in private environment variables, never in Git.
 - The one hundred loop labels are engineering checkpoints, not a claim of one hundred autonomous production jobs.
 
-See PHASE9_CHECKPOINT.md for historical evidence and TENANCY_DESIGN.md for the explicit single-operator security boundary.
+See [Phase 9](phase-09-historical-intelligence.md) for historical intelligence and [single-operator security design](../architecture/single-operator-security.md) for the explicit deployment boundary.

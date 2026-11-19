@@ -1,12 +1,12 @@
-# Price Agent — Data Workspace Upgrade
+# Price Agent — Local data workspace (historical upgrade guide)
 
-This is an **overlay**, not a replacement repository. Copy the `backend/` directory in this archive over the existing `backend/` directory. Existing source files are kept. Only two existing files are replaced: `backend/price_engine/templates/dashboard.html` and `backend/price_engine/templates/catalog.html`, to add the new workspace navigation link. The original `price_engine.dashboard`, original catalog routes, and root `price_agent.py` are unchanged. A separate `price_agent_workspace.py` entry point adds the lookup tool to the existing ReAct agent without modifying its safety checks.
+> **Current repository:** The workspace is already included in `main`; there is **no archive to extract or overlay to copy**. Follow the [root quick start](../../README.md). The historical integration details below explain how the optional workspace was introduced.
 
 ## Run on Windows / VS Code
 
-1. Stop the current server with `Ctrl+C`.
-2. Extract this archive into the **root** of your existing `Price-agent` clone (the folder containing `price_agent.py`). Confirm the archive's `backend/` files merge with your existing `backend/` directory, not a nested `backend/backend` folder.
-3. From the existing clone root in PowerShell:
+1. Stop the running server with `Ctrl+C`, if applicable.
+2. Pull the latest `main` branch in your existing clone (back up local changes first).
+3. From the existing repository root in PowerShell:
 
 ```powershell
 python -m pip install -r backend/requirements-workspace.txt
@@ -89,4 +89,4 @@ Only run on localhost (`127.0.0.1`). Host-header validation helps prevent DNS-re
 
 ## Intelligence Studio extension (November 2026)
 
-An additional `/intelligence` page is now available **when starting the same `python -m price_engine.workspace` server**. It keeps all previous upload/lookup endpoints intact and adds an entirely local virtual catalog and comparison interface. No SerpApi key is needed for its fictitious products. Read [INTELLIGENCE_STUDIO.md](INTELLIGENCE_STUDIO.md) for architecture, data simulation limits, usage, tests and security details.
+An additional `/intelligence` page is now available **when starting the same `python -m price_engine.workspace` server**. It keeps all previous upload/lookup endpoints intact and adds an entirely local virtual catalog and comparison interface. No SerpApi key is needed for its fictitious products. Read [Virtual Intelligence Studio](virtual-intelligence-studio.md) for architecture, data simulation limits, usage, tests and security details.

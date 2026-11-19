@@ -1,4 +1,6 @@
-# Price Agent — backend and local dashboard
+# Price Agent — backend and local dashboards
+
+**Current scope (Phases 1–10, loops 1–100):** The local workspace includes source-attributed SerpApi offers, verified-offer research and comparison, opt-in watches and alerts, deterministic command planning, historical intelligence and a SQLite integrity audit. These features are **not** evidence that retailer prices are independently confirmed or that the local app is safe for public deployment.
 
 The backend uses Python 3.11+, asyncio, `httpx` (optional, policy-gated
 retailer HTTP transport), BeautifulSoup for JSON-LD parsing, and SQLite with
@@ -176,7 +178,7 @@ demo command **once** before opening the overview dashboard.
 Open Food Facts data is community-maintained and licensed under **ODbL**.
 Give contributors attribution and follow database share-alike obligations.
 Product names, codes, categories and source links do **not** establish
-retailer prices, stock or a trustworthy seller rating. See [PHASE5.md](../PHASE5.md).
+retailer prices, stock or a trustworthy seller rating. See [Open Food Facts catalog guide](../docs/guides/open-food-facts-catalog.md).
 
 ## Verification and release history
 
@@ -198,5 +200,12 @@ The dashboard is **local and unauthenticated**. The root ReAct agent still
 uses separate USD mock data, not imported catalog records.
 
 Read the [root README](../README.md) for a unified quick start,
-[PHASE5.md](../PHASE5.md) for the complete import/license guide and
-[AUDIT.md](../AUDIT.md) for preserved historical audit findings.
+[Open Food Facts catalog guide](../docs/guides/open-food-facts-catalog.md) for the complete import/license guide and
+[historical audit](../docs/audits/legacy-hardening.md) for preserved historical audit findings.
+
+
+## Latest verified-offer tools (Phases 6–10)
+
+Launch the complete local UI using `python -m price_engine.workspace` from `backend/`, as shown in the [root quick start](../README.md). Open `/verified` for previously stored provider offers and operator-initiated lookups. Related read/diagnostic routes include `GET /api/verified/research`, `GET /api/verified/offers/{offer_id}/intelligence`, and `GET /api/verified/diagnostics`. The `/intelligence` virtual catalog is explicitly fictional and separate.
+
+From the repository root, `real_price_agent.py`, `price_watch.py`, `price_alert.py`, `price_research.py`, `price_assistant.py`, `price_intelligence.py`, and `price_audit.py` remain stable compatibility entry points. See the [feature phases](../docs/README.md) for detailed commands and the [single-operator security boundary](../docs/architecture/single-operator-security.md). Historical test counts and phase references above describe their original PRs; the newer phases add more tests.

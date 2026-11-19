@@ -1,3 +1,5 @@
+> **Archived audit:** This records earlier milestones and measurements, not the current release. See the [current overview](../../README.md) and [documentation index](../README.md) first. Historical filenames in narrative text are intentionally preserved.
+
 # Price Agent — Phase 0–4 hardening and dashboard audit
 
 **Current GitHub release state (verified 2026-11-18):** Phase 2 hardening
@@ -18,8 +20,8 @@ schema was not changed; Phase 5 added a **separate**
 catalog ingestion and strict type/property tests remain unverified:
 the application is **not production-ready**.
 
-For current installation and usage, read [README.md](README.md),
-[PHASE5.md](PHASE5.md), and [backend/README.md](backend/README.md).
+For current installation and usage, read [README.md](../../README.md),
+[catalog import guide](../guides/open-food-facts-catalog.md), and [backend/README.md](../../backend/README.md).
 For the new release evidence, see the Phase 5 appendix at the bottom.
 
 ## Scope and provenance
@@ -319,8 +321,8 @@ that each local finding has a one-to-one public commit.
   F19 (DNS pinning), F21 (strict typing verification), cross-process rate
   coordination, attempt logging and versioned migrations remain open.
 
-**Documentation structure:** The [root README](README.md) is now the unified
-quick-start and current project summary; [backend/README.md](backend/README.md)
+**Documentation structure:** The [root README](../../README.md) is now the unified
+quick-start and current project summary; [backend/README.md](../../backend/README.md)
 is the implementation/runbook detail; this `AUDIT.md` retains the complete
 historical finding matrix, test evidence, published commit history, and
 remaining security/reliability limitations.
@@ -393,7 +395,7 @@ or automatically populated.
    redistributed derived database. Source data quality and category
    classification need independent validation.
 
-The updated root [README.md](README.md) is the current quick start;
-[PHASE5.md](PHASE5.md) documents importing and checking real counts.
+The updated root [README.md](../../README.md) is the current quick start;
+[catalog import guide](../guides/open-food-facts-catalog.md) documents importing and checking real counts.
 This appendix **adds** release evidence and does not rewrite the
 historical Phase 0–4 matrix or its originally observed results.
