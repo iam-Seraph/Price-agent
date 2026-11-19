@@ -19,8 +19,8 @@ def utc_now() -> str:
 class VerifiedPriceStore:
     def __init__(self, path: str | Path, *, initialize: bool = True) -> None:
         self.path = Path(path).expanduser().resolve()
-        self.path.parent.mkdir(parents=True, exist_ok=True)
         if initialize:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
             with self.connect() as db:
                 db.executescript("BEGIN IMMEDIATE;\n" + MIGRATION.read_text(encoding="utf-8")
                                  + "\nCOMMIT;")
@@ -33,6 +33,23 @@ class VerifiedPriceStore:
             db.execute("PRAGMA foreign_keys=ON")
             db.execute("PRAGMA busy_timeout=15000")
             db.execute("PRAGMA journal_mode=WAL")
+            yield db
+        finally:
+            db.close()
+
+    @contextmanager
+    def connect_readonly(self) -> Iterator[sqlite3.Connection]:
+        """Open an existing database without creating files or changing journal mode.
+
+        Audits must not silently initialize empty databases. SQLite's mode=ro
+        and query_only provide independent write protection for diagnostics.
+        """
+        db = sqlite3.connect(self.path.as_uri() + "?mode=ro", uri=True, timeout=15)
+        try:
+            db.row_factory = sqlite3.Row
+            db.execute("PRAGMA query_only=ON")
+            db.execute("PRAGMA foreign_keys=ON")
+            db.execute("PRAGMA busy_timeout=15000")
             yield db
         finally:
             db.close()

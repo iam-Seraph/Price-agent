@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import io
 import json
+import sqlite3
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -92,8 +93,25 @@ class ReleaseAuditTests(unittest.TestCase):
             code = audit_main(["--db", str(path)])
         self.assertEqual(code, 2)
         self.assertEqual(json.loads(output.getvalue())["status"], "ERROR")
+        self.assertFalse(path.exists(), "Read-only audit must not create a missing database")
         with self.assertRaises(ValueError):
             audit_store(self.store, now=datetime(2026, 1, 1))
+
+    def test_audit_missing_nested_path_does_not_create_directories(self) -> None:
+        nested = Path(self.temp.name) / "not-created" / "missing.sqlite3"
+        output = io.StringIO()
+        with redirect_stdout(output):
+            status = audit_main(["--db", str(nested)])
+        self.assertEqual(status, 2)
+        self.assertEqual(json.loads(output.getvalue())["status"], "ERROR")
+        self.assertFalse(nested.parent.exists())
+
+    def test_readonly_connection_refuses_sql_mutations(self) -> None:
+        self.quote()
+        with self.store.connect_readonly() as db:
+            with self.assertRaises(sqlite3.OperationalError):
+                db.execute("DELETE FROM verified_offers")
+        self.assertEqual(self.store.stats()["observations"], 1)
 
     def test_http_diagnostics_and_verified_security_headers(self) -> None:
         self.quote()

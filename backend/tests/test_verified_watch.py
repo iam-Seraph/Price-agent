@@ -9,6 +9,7 @@ from contextlib import redirect_stdout
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
@@ -85,6 +86,20 @@ class WatchStoreTests(unittest.TestCase):
         listed = self.store.prices.list_offers()
         self.assertEqual(len(listed), 1)
         self.assertEqual(listed[0]["latest_price_minor"], 299900)
+
+    def test_continuous_worker_keeps_alert_store_enabled(self) -> None:
+        # Stop at the first iteration: no network access or infinite loop.
+        log = io.StringIO()
+        with patch("price_engine.verified.watch_cli.run_due_once",
+                   side_effect=KeyboardInterrupt) as run:
+            with redirect_stdout(log):
+                status = watch_main(["--db", str(self.db), "run",
+                                     "--continuous", "--sleep-seconds", "15"])
+        self.assertEqual(status, 0)
+        self.assertEqual(run.call_count, 1)
+        self.assertIn("alerts", run.call_args.kwargs)
+        from price_engine.verified.alert_store import AlertStore
+        self.assertIsInstance(run.call_args.kwargs["alerts"], AlertStore)
 
     def test_cli_and_readonly_watch_api(self) -> None:
         output = io.StringIO()

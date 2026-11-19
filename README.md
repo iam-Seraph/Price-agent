@@ -57,21 +57,15 @@ Run these from the repository root, using the **same** `tracker.sqlite3` for rel
 
 A saved price watch **does not automatically poll**. Start the opt-in worker explicitly with `price_watch.py ... run`; alerts additionally require configured, consented channels, credentials and a separately running `price_alert.py` dispatcher. See [Phase 4](docs/phases/phase-04-price-watches.md) and [Phase 5 alerts](docs/phases/phase-05-alerts.md).
 
-## Verify the project
+## Verify the complete offline project
+
+Install the workspace and development dependencies (commands above), and install Node.js 22 or newer. Run **one command** from the repository root:
 
 ~~~bash
-cd backend
-python -m unittest discover -s tests -v
-python -m pytest -q tests
-python -m compileall -q price_engine tests
-cd ..
-node --check backend/price_engine/static/intelligence.js
-node --check backend/price_engine/static/intelligence.worker.js
-node --check backend/price_engine/static/verified.js
-node --test backend/tests/test_intelligence_worker.cjs
+python scripts/full_check.py
 ~~~
 
-The three GitHub Actions workflows cover backend/verified regressions and browser-script checks. Passing offline tests **does not validate live retailers, large datasets, production security, or public hosting**.
+This runs documentation-link checks, all backend **pytest and unittest** regression tests (including an end-to-end mocked source-to-alert smoke test), Python compilation, JavaScript syntax checks and Node worker tests. The same command runs in the workspace CI workflow. It **does not** call live SerpApi/Groq, deliver real notifications, purchase products, prove merchant facts or run production load/security tests.
 
 ## Organized repository map
 
