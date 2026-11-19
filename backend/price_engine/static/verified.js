@@ -166,3 +166,127 @@ $("budget-form").addEventListener("submit", async event => {
 });
 
 renderOverview();
+
+
+
+async function postAPI(path, data) {
+  const response = await fetch(path, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    cache: "no-store",
+    credentials: "same-origin",
+    body: JSON.stringify(data || {})
+  });
+  let body;
+  try { body = await response.json(); } catch { throw new Error("Server returned invalid JSON"); }
+  if (!response.ok) {
+    throw new Error(typeof body.detail === "string" ? body.detail : "Request failed");
+  }
+  return body;
+}
+
+function validBudget(value) {
+  return /^[0-9,]+(\.[0-9]{1,2})?$/.test(value) && value.length <= 30;
+}
+
+$("search-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const query = $("search-query").value.trim();
+  const budget = $("search-budget").value.trim();
+  const currency = $("search-currency").value;
+  if (query.length < 2 || query.length > 120 || !validBudget(budget)) {
+    showMessage("search-status", "Use a 2–120 character query and valid positive amount.");
+    return;
+  }
+  const submit = $("search-form").querySelector("button[type=submit]");
+  submit.disabled = true;
+  showMessage("search-status", "Requesting source-attributed offers…");
+  try {
+    const result = await postAPI("/api/verified/search", {query, budget, currency, limit: 5});
+    showMessage("search-status",
+      "Retrieved " + result.analyses.length + " matching offers; stored " +
+      result.inserted + " new observations. Provider-reported only.");
+    await renderOverview();
+  } catch (error) {
+    showMessage("search-status", "Search unavailable: " + error.message);
+  } finally {
+    submit.disabled = false;
+  }
+});
+
+async function refreshWatches() {
+  const tbody = $("watches-body");
+  try {
+    const response = await api("/api/verified/watches?limit=100");
+    tbody.replaceChildren();
+    for (const watch of response.watches) {
+      const row = document.createElement("tr");
+      cell(row, watch.query_text);
+      cell(row, money(watch.budget_minor, watch.currency));
+      cell(row, watch.enabled ? "Enabled (worker required)" : "Disabled");
+      const actions = document.createElement("td");
+      if (watch.enabled) {
+        const disable = document.createElement("button");
+        disable.type = "button"; disable.textContent = "Disable";
+        disable.addEventListener("click", async () => {
+          if (!window.confirm("Disable this price watch?")) return;
+          try {
+            await postAPI("/api/verified/watches/" + encodeURIComponent(watch.watch_id) + "/disable", {});
+            showMessage("watch-status", "Watch disabled.");
+            await refreshWatches();
+          } catch (error) { showMessage("watch-status", error.message); }
+        });
+        actions.appendChild(disable);
+        for (const channel of ["EMAIL", "TELEGRAM"]) {
+          const button = document.createElement("button");
+          button.type = "button"; button.textContent = "Enable " + channel;
+          button.addEventListener("click", async () => {
+            const description = "Enable " + channel + " alerts for " +
+              watch.query_text + "? This requires private server credentials and an explicitly running delivery worker.";
+            if (!window.confirm(description)) return;
+            try {
+              await postAPI("/api/verified/alerts/channel", {
+                watch_id: watch.watch_id, channel, enabled: true, confirmed: true
+              });
+              showMessage("watch-status", channel + " alerts enabled. Delivery worker is not automatically started.");
+            } catch (error) { showMessage("watch-status", error.message); }
+          });
+          actions.appendChild(button);
+        }
+      }
+      row.appendChild(actions);
+      tbody.appendChild(row);
+    }
+    if (response.watches.length === 0) {
+      const row = document.createElement("tr"), td = document.createElement("td");
+      td.colSpan = 4; td.textContent = "No saved watch queries.";
+      row.appendChild(td); tbody.appendChild(row);
+    }
+  } catch (error) {
+    showMessage("watch-status", "Watchlist unavailable: " + error.message);
+  }
+}
+
+$("watch-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const query = $("watch-query").value.trim();
+  const budget = $("watch-budget").value.trim();
+  const currency = $("watch-currency").value;
+  const interval_minutes = Number($("watch-interval").value);
+  if (query.length < 2 || query.length > 120 || !validBudget(budget)) {
+    showMessage("watch-status", "Use a valid query and numeric price threshold.");
+    return;
+  }
+  try {
+    const result = await postAPI("/api/verified/watches", {
+      query, budget, currency, interval_minutes
+    });
+    showMessage("watch-status",
+      "Watch saved: " + result.watch_id + ". Monitoring has not been started automatically.");
+    await refreshWatches();
+  } catch (error) {
+    showMessage("watch-status", "Unable to save watch: " + error.message);
+  }
+});
+
+refreshWatches();

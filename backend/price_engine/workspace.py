@@ -11,7 +11,7 @@ from typing import Literal
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
@@ -36,8 +36,14 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
     @app.middleware("http")
     async def local_write_origin(request: Request, call_next):
         # Local, unauthenticated development server: block cross-site browser writes.
-        if request.url.path.startswith("/api/workspace/") and request.method == "POST":
+        is_workspace = request.url.path.startswith("/api/workspace/")
+        is_verified = request.url.path.startswith("/api/verified/")
+        if request.method == "POST" and (is_workspace or is_verified):
             origin = request.headers.get("origin")
+            if is_verified and not origin:
+                return JSONResponse({"detail": "Origin header required for local write"}, status_code=403)
+            if request.headers.get("sec-fetch-site") == "cross-site":
+                return JSONResponse({"detail": "Cross-site writes are disabled"}, status_code=403)
             if origin:
                 parsed = urlsplit(origin)
                 if (parsed.scheme not in {"http", "https"}
@@ -52,8 +58,13 @@ def register_workspace_routes(app: FastAPI, workspace_db: str | Path) -> None:
 
     @app.get("/intelligence", response_class=HTMLResponse)
     def intelligence_page(request: Request):
-        """Optional virtual catalog studio, separate from real retailer history."""
+        """Preserve the explicitly labeled legacy simulator for existing users."""
         return _TEMPLATES.TemplateResponse(request, "intelligence.html", {})
+
+    @app.get("/simulation")
+    def simulation_alias():
+        """Optional explicit route for the fictional Intelligence Studio."""
+        return RedirectResponse(url="/intelligence", status_code=307)
 
     @app.get("/api/workspace/status")
     def status():
