@@ -22,3 +22,6 @@ backend/data/
 *.sqlite3-shm
 *.csv.gz
 *.tsv.gz
+
+# Synthetic-only offline demo data
+.price-agent-demo/

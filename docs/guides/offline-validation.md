@@ -15,6 +15,14 @@ Phase 11 adds offline tests for explicit preference consent, source-truth separa
 
 The script runs **all** of these, even if one fails: Markdown link validation; `pytest` and `unittest` discovery for `backend/tests/`; compilation of the root Python launchers, backend and scripts; JS syntax checks for Intelligence Studio, verified UI and static website; and the Node.js Web Worker test suite. It prints a per-step result and exits nonzero if any step fails. The same command runs in GitHub's Workspace regression workflow.
 
+## Fully isolated offline demo smoke
+
+~~~bash
+python price_demo.py smoke
+~~~
+
+The offline launcher runs against temporary synthetic-only databases. Full checks also validate its browser JavaScript syntax, CLI entry point and API isolation; see [offline demo guide](full-offline-demo.md).
+
 ## End-to-end smoke path
 
 `backend/tests/test_e2e_verified_flow.py` uses a temporary SQLite file and **invented test fixtures only**. It covers creating an explicit watch, enabling an alert rule, persisting mock provider-shaped historical observations, processing one mocked provider search, qualifying/enqueuing a deterministic alert, read-only product research, observed history, integrity audit, HTTP API responses and **mocked** delivery. The test never sends email or requests a retailer.

@@ -10,6 +10,7 @@ Start at the [repository README](../README.md) for current setup, features and C
 - [Backend implementation](../backend/README.md) — modules, database, API and tests.
 - [Static site](../site/README.md) — portfolio/demo website.
 - [Offline end-to-end validation](guides/offline-validation.md) — full automated check command, test coverage and live-service limitations.
+- [Full interactive offline demo](guides/full-offline-demo.md) — no-key launcher, source separation, feature coverage and commands.
 
 - [Phase 11 — API configuration and controlled learning](phases/phase-11-configuration-and-learning.md) — opt-in preferences, source evidence separation and key setup.
 
