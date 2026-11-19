@@ -8,6 +8,7 @@ from .comparison import comparison_table
 from .explanations import explain_candidates
 from .research import research_offers
 from .store import VerifiedPriceStore
+from .learning import LearningStore
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -21,7 +22,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         store = VerifiedPriceStore(args.db)
         records = research_offers(store, args.query, args.budget,
-                                  currency=args.currency, limit=args.limit)
+                                  currency=args.currency, limit=args.limit,
+                                  learning=LearningStore(args.db))
         result = {
             "research": records,
             "comparison": comparison_table(records),

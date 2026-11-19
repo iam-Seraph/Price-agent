@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "forget":
             result = {"removed": store.forget_offer(args.offer_id)}
         else:
-            result = store.give_feedback(args.offer_id, args.command.upper().replace("PREFER", "PREFER").replace("AVOID", "AVOID"))
+            result = store.give_feedback(args.offer_id, "PREFER" if args.command == "prefer" else "AVOID")
         print(json.dumps(result, indent=2))
         return 0
     except ValueError as exc:
