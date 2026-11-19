@@ -9,8 +9,9 @@ Start at the [repository README](../README.md) for current setup, features and C
 - [Virtual Intelligence Studio](guides/virtual-intelligence-studio.md) — fictional virtual products, worker architecture and UI controls.
 - [Backend implementation](../backend/README.md) — modules, database, API and tests.
 - [Static site](../site/README.md) — portfolio/demo website.
+- [Offline end-to-end validation](guides/offline-validation.md) — full automated check command, test coverage and live-service limitations.
 
-- [Offline end-to-end validation](guides/offline-validation.md) — full automated check command, test coverage and live-service limitations.\n\n## Architecture and audit
+## Architecture and audit
 
 - [Single-operator security boundary](architecture/single-operator-security.md) — no real authentication or tenant isolation yet.
 - [Historical hardening audit](audits/legacy-hardening.md) — preserved early benchmarks and limitations; treat early status statements as historical.
