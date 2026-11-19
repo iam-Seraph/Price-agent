@@ -46,3 +46,43 @@ def daily_series(store: VerifiedPriceStore, offer_id: str, *, days: int = 90,
         "provenance": "PROVIDER_REPORTED",
         "notice": "Daily medians use at most 1000 recent provider observations; no unobserved days are interpolated.",
     }
+
+
+def detect_price_anomaly(store: VerifiedPriceStore, offer_id: str, *,
+                         now: datetime | None = None) -> dict[str, Any]:
+    """Report abrupt price changes against earlier observed daily medians."""
+    history = daily_series(store, offer_id, days=90, now=now)
+    daily = history["series"]
+    observations = store.history(offer_id, days=90, limit=1000)
+    clock = now or datetime.now(timezone.utc)
+    eligible = [row for row in observations
+                if datetime.fromisoformat(
+                    str(row["observed_at"]).replace("Z","+00:00")) <= clock]
+    if not eligible:
+        raise ValueError("No recorded provider prices available")
+    current = eligible[-1]
+    current_minor = int(current["price_minor"])
+    current_day = str(current["observed_at"])[:10]
+    before = [int(row["daily_median_minor"]) for row in daily
+              if str(row["date"]) < current_day][-30:]
+    if len(before) < 9:
+        return {
+            "offer_id": offer_id, "status": "INSUFFICIENT_PRIOR_DAYS",
+            "prior_days": len(before), "is_anomaly": False,
+            "current_price_minor": current_minor,
+            "baseline_minor": None, "source": "PROVIDER_REPORTED",
+        }
+    baseline = int(median_low(before))
+    abrupt_drop = current_minor * 100 < baseline * 60
+    abrupt_rise = current_minor * 100 > baseline * 160
+    reason = ("SHARP_PRICE_DROP" if abrupt_drop else
+              "SHARP_PRICE_INCREASE" if abrupt_rise else "NORMAL_RANGE")
+    return {
+        "offer_id": offer_id,
+        "status": reason, "prior_days": len(before),
+        "current_price_minor": current_minor,
+        "baseline_minor": baseline,
+        "is_anomaly": abrupt_drop or abrupt_rise,
+        "source": "PROVIDER_REPORTED",
+        "notice": "Anomaly thresholds flag suspicious changes; they do not prove price manipulation.",
+    }
