@@ -117,7 +117,7 @@ def _offline(query: str) -> list[dict[str, Any]]:
              "specs": r.get("specs", {}), "url": None} for r in matches]
 
 
-def lookup_product(query: str) -> dict[str, Any]:
+def lookup_product(query: str, *, offline_only: bool = False) -> dict[str, Any]:
     """Tool entry point for the web UI or an LLM function-call dispatcher.
 
     This is research data only. Never treat it as certified deal history.
@@ -127,6 +127,11 @@ def lookup_product(query: str) -> dict[str, Any]:
         raise ValueError("Search query must be 2–120 characters")
     warnings: list[str] = []
     checked = datetime.now(timezone.utc).isoformat()
+    if offline_only:
+        return {"provider": "OFFLINE_DEMO", "live_retailer_data": False,
+                "retrieved_at_utc": checked, "offers": _offline(query),
+                "warnings": ["Offline demo explicitly disabled all provider network requests"],
+                "notice": "All offline prices, reviews and stock statuses are synthetic."}
     if os.getenv("SERPAPI_KEY", "").strip():
         try:
             return {"provider": "SERPAPI_GOOGLE_SHOPPING", "live_retailer_data": True,
