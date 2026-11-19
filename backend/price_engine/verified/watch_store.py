@@ -51,6 +51,13 @@ class WatchStore:
                       interval_minutes*60,created,created))
         return watch_id
 
+    def active_watch_count(self) -> int:
+        """Count only enabled watches when enforcing local capacity."""
+        with self.prices.connect() as db:
+            return int(db.execute(
+                "SELECT COUNT(*) FROM verified_watch_queries WHERE enabled=1"
+            ).fetchone()[0])
+
     def list_watches(self, limit: int = 100) -> list[dict[str, object]]:
         if type(limit) is not int or not 1 <= limit <= 200:
             raise ValueError("Watch list limit must be 1-200")
