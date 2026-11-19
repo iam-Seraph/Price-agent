@@ -12,6 +12,9 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
 from .money import minor_units
+from .research import research_offers
+from .comparison import comparison_table
+from .explanations import explain_candidates
 from .provider import ProviderUnavailable, search_serpapi
 
 from .analysis import analyze_offer
@@ -82,6 +85,20 @@ def register_verified_routes(app: FastAPI, db_path: str | Path) -> None:
         return {"provider": "SERPAPI_GOOGLE_SHOPPING",
                 "provenance": "PROVIDER_REPORTED", "inserted": inserted,
                 "analyses": analyses}
+
+    @app.get("/api/verified/research")
+    def stored_shopping_research(
+            q: str = Query(..., min_length=2, max_length=120),
+            budget: str = Query(..., min_length=1, max_length=30),
+            currency: Literal["INR", "USD"] = "INR",
+            limit: int = Query(30, ge=1, le=50)):
+        """Compare saved source observations only; never execute web requests."""
+        try:
+            result = research_offers(store, q, budget, currency=currency, limit=limit)
+            return {"research": result, "comparison": comparison_table(result),
+                    "explanations": explain_candidates(result)}
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get("/api/verified/status")
     def verified_status():

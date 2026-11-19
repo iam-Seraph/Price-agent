@@ -81,6 +81,37 @@ class VerifiedPriceStore:
                 (offer_id,)).fetchone()
             return dict(row) if row else None
 
+    def find_offers(self, query: str, currency: str, *, limit: int = 50
+                    ) -> list[dict[str, object]]:
+        """Query actual saved provider offers; escape SQL wildcard characters."""
+        from .money import validate_currency
+        if (not isinstance(query, str) or not 2 <= len(query.strip()) <= 120
+                or any(ord(ch) < 32 for ch in query)):
+            raise ValueError("Research query must contain 2-120 printable characters")
+        currency = validate_currency(currency)
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("Research result limit must be 1-100")
+        escaped = query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        with self.connect() as db:
+            rows = db.execute("""
+                SELECT o.offer_id,o.provider,o.provider_product_id,o.title,
+                       o.merchant,o.currency,o.product_url,
+                       p.observed_at,p.price_minor,p.stock,p.seller_rating,
+                       p.provenance,p.evidence_sha256
+                FROM verified_offers o
+                JOIN verified_offer_observations p ON p.event_id=(
+                    SELECT x.event_id FROM verified_offer_observations x
+                    WHERE x.offer_id=o.offer_id
+                    ORDER BY x.observed_at DESC,x.event_id DESC LIMIT 1
+                )
+                WHERE o.currency=? AND
+                  (o.title LIKE ? ESCAPE '\\' COLLATE NOCASE OR
+                   o.merchant LIKE ? ESCAPE '\\' COLLATE NOCASE)
+                ORDER BY p.observed_at DESC,o.offer_id
+                LIMIT ?
+            """, (currency, "%" + escaped + "%", "%" + escaped + "%", limit)).fetchall()
+        return [dict(row) for row in rows]
+
     def stats(self) -> dict[str, object]:
         """Basic local ingestion metrics, computed from actual persisted rows."""
         with self.connect() as db:
