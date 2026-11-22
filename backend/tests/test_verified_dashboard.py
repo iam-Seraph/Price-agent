@@ -86,5 +86,55 @@ class VerifiedDashboardTests(unittest.TestCase):
             self.assertEqual(result.status_code, 200)
 
 
+    def test_verified_studio_redesign_preserves_controls_and_provenance(self) -> None:
+        from html.parser import HTMLParser
+        import re
+
+        class ElementIDs(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.ids = []
+                self.links = []
+            def handle_starttag(self, tag, attrs):
+                data = dict(attrs)
+                if "id" in data:
+                    self.ids.append(data["id"])
+                if tag == "a" and "href" in data:
+                    self.links.append(data["href"])
+
+        page_response = self.client.get("/verified")
+        self.assertEqual(page_response.status_code, 200)
+        html = page_response.text
+        parsed = ElementIDs()
+        parsed.feed(html)
+        js = self.client.get("/static/verified.js").text
+        bound = set(re.findall(r'\$\("([a-zA-Z][a-zA-Z0-9_-]+)"\)', js))
+        self.assertFalse(bound.difference(parsed.ids),
+                         "Missing JavaScript-bound elements: " +
+                         repr(sorted(bound.difference(parsed.ids))))
+        self.assertEqual(len(parsed.ids), len(set(parsed.ids)), "Duplicate DOM IDs")
+        for control in ("search-form", "compare-form", "budget-form", "watch-form",
+                        "assistant-plan-form", "assistant-confirm", "learning-enable",
+                        "learning-disable", "learning-clear", "learning-prefer",
+                        "learning-avoid", "learning-forget", "history-chart",
+                        "intelligence-results", "watches-body", "comparison-body"):
+            self.assertIn(control, parsed.ids)
+        self.assertIn("Price intelligence", html)
+        self.assertIn('class="sidebar"', html)
+        self.assertIn('class="offer-grid"', html)
+        self.assertIn("Provider-reported prices, not independently verified", html)
+        self.assertIn("never start just by creating a watch", html)
+        self.assertIn("/intelligence", parsed.links)
+        self.assertNotIn("3,145,728", html)
+        self.assertNotIn("SIMULATED_SENT", html)
+        self.assertIn("function renderOfferCard(offer)", js)
+        self.assertIn("a.textContent = offer.title", js)
+        self.assertIn('url.protocol === "https:"', js)
+        self.assertIn('rel = "noopener noreferrer"', js)
+        self.assertNotIn(".innerHTML", js)
+        self.assertIn('"/api/verified/search"', js)
+        self.assertIn('"/api/verified/watches"', js)
+
+
 if __name__ == "__main__":
     unittest.main()
