@@ -78,6 +78,12 @@ async function chooseOffer(offer) {
   currentOffer = offer;
   $("selection").textContent = offer.title + " — " + offer.merchant;
   $("learning-selected").textContent = "Selected for feedback: " + offer.title + " — " + offer.merchant;
+  for (const card of document.querySelectorAll(".offer-card")) {
+    const selected = card.dataset.offerId === offer.offer_id;
+    card.classList.toggle("is-selected", selected);
+    const inspect = card.querySelector(".offer-actions button");
+    if (inspect) inspect.setAttribute("aria-pressed", String(selected));
+  }
   $("currency").value = offer.currency;
   showMessage("decision", "Select Analyze to evaluate source-backed deal rules.");
   $("checks").replaceChildren();
@@ -120,42 +126,154 @@ async function refreshIntelligence() {
   }
 }
 
+function makeIcon(href) {
+  const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  icon.setAttribute("aria-hidden", "true");
+  const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  use.setAttribute("href", href);
+  icon.appendChild(use);
+  return icon;
+}
+
+function safeSourceLink(value) {
+  if (typeof value !== "string" || value.length > 2048) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function renderOfferCard(offer) {
+  const card = document.createElement("article");
+  card.className = "offer-card";
+  card.setAttribute("role", "listitem");
+  card.dataset.offerId = String(offer.offer_id);
+  const visual = document.createElement("div");
+  visual.className = "offer-art";
+  const stamp = document.createElement("span");
+  stamp.className = "art-label";
+  stamp.textContent = "SAVED OBSERVATION";
+  visual.appendChild(stamp);
+  const glyph = document.createElement("span");
+  glyph.className = "art-mark";
+  glyph.setAttribute("aria-hidden", "true");
+  // Abstract lettermark only. Do not invent retailer images or product photos.
+  const words = String(offer.title || "").trim().split(/\s+/);
+  glyph.textContent = words.slice(0, 2).map(word => word[0] || "").join("").toUpperCase().slice(0, 2) || "PS";
+  visual.appendChild(glyph);
+  const source = document.createElement("span");
+  source.className = "art-source";
+  source.textContent = "PROVIDER-REPORTED";
+  visual.appendChild(source);
+  const stock = document.createElement("span");
+  stock.className = "stock-tag";
+  stock.textContent = String(offer.stock || "UNKNOWN").replaceAll("_", " ");
+  if (offer.stock === "IN_STOCK") stock.classList.add("in-stock");
+  if (offer.stock === "OUT_OF_STOCK") stock.classList.add("out-stock");
+  visual.appendChild(stock);
+  card.appendChild(visual);
+
+  const body = document.createElement("div");
+  body.className = "offer-content";
+  const overline = document.createElement("div");
+  overline.className = "offer-eyebrow";
+  overline.textContent = offer.currency === "INR" ? "GOOGLE SHOPPING • INR" :
+                         offer.currency === "USD" ? "GOOGLE SHOPPING • USD" :
+                         "PROVIDER-REPORTED LISTING";
+  body.appendChild(overline);
+  const heading = document.createElement("h3");
+  heading.className = "offer-title";
+  const productURL = safeSourceLink(offer.product_url);
+  if (productURL) {
+    const a = document.createElement("a");
+    a.href = productURL;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = offer.title || "Untitled provider offer";
+    a.setAttribute("aria-label", (offer.title || "Untitled provider offer") + " — open source listing in a new tab");
+    heading.appendChild(a);
+  } else {
+    heading.textContent = offer.title || "Untitled provider offer";
+  }
+  body.appendChild(heading);
+  const merchant = document.createElement("p");
+  merchant.className = "offer-merchant";
+  merchant.textContent = "Reported merchant · " + (offer.merchant || "Unknown");
+  body.appendChild(merchant);
+  const bottom = document.createElement("div");
+  bottom.className = "offer-bottom";
+  const priceBlock = document.createElement("div");
+  const label = document.createElement("span");
+  label.className = "caption";
+  label.textContent = "LAST REPORTED PRICE";
+  const price = document.createElement("strong");
+  price.textContent = money(offer.latest_price_minor, offer.currency);
+  priceBlock.append(label, price);
+  const date = document.createElement("small");
+  date.textContent = formatDate(offer.last_observed_at);
+  bottom.append(priceBlock, date);
+  body.appendChild(bottom);
+  const actions = document.createElement("div");
+  actions.className = "offer-actions";
+  const inspect = document.createElement("button");
+  inspect.type = "button";
+  inspect.textContent = "Inspect evidence";
+  inspect.setAttribute("aria-pressed", "false");
+  inspect.addEventListener("click", () => {
+    chooseOffer(offer);
+    document.getElementById("analysis").scrollIntoView({behavior: "auto", block: "start"});
+  });
+  actions.appendChild(inspect);
+  if (productURL) {
+    const link = document.createElement("a");
+    link.href = productURL;
+    link.className = "external-offer";
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.title = "Open source listing (external)";
+    link.setAttribute("aria-label", "Open " + (offer.title || "source listing") + " externally");
+    link.appendChild(makeIcon("#i-arrow"));
+    actions.appendChild(link);
+  }
+  body.appendChild(actions);
+  card.appendChild(body);
+  return card;
+}
+
 async function renderOverview() {
   try {
-    const [stats, data] = await Promise.all([api("/api/verified/status"), api("/api/verified/offers?limit=100")]);
+    const [stats, data] = await Promise.all([
+      api("/api/verified/status"),
+      api("/api/verified/offers?limit=100")
+    ]);
     $("offer-count").textContent = stats.offers;
     $("observation-count").textContent = stats.observations;
     $("latest-record").textContent = formatDate(stats.last_observed_at);
-    const tbody = $("offers-body");
-    tbody.replaceChildren();
+    $("sidebar-offer-count").textContent = stats.offers;
+    const grid = $("offers-body");
+    grid.replaceChildren();
     for (const offer of data.offers) {
-      const tr = document.createElement("tr");
-      const nameCell = cell(tr, "");
-      const anchor = document.createElement("a");
-      anchor.textContent = offer.title;
-      try {
-        const link = new URL(offer.product_url);
-        if (link.protocol === "https:") {
-          anchor.href = link.href; anchor.target = "_blank"; anchor.rel = "noopener noreferrer";
-        }
-      } catch {}
-      nameCell.appendChild(anchor);
-      cell(tr, offer.merchant);
-      cell(tr, money(offer.latest_price_minor, offer.currency));
-      cell(tr, offer.stock);
-      const td = document.createElement("td");
-      const button = document.createElement("button");
-      button.type = "button"; button.textContent = "Inspect";
-      button.addEventListener("click", () => chooseOffer(offer));
-      td.appendChild(button); tr.appendChild(td); tbody.appendChild(tr);
+      const card = renderOfferCard(offer);
+      if (currentOffer && currentOffer.offer_id === offer.offer_id) {
+        card.classList.add("is-selected");
+        card.querySelector(".offer-actions button").setAttribute("aria-pressed", "true");
+      }
+      grid.appendChild(card);
     }
     if (!data.offers.length) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 5; td.textContent = "No provider offers stored. Use the real_price_agent.py CLI after configuring a private SerpApi key.";
-      tr.appendChild(td); tbody.appendChild(tr);
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      const title = document.createElement("strong");
+      title.textContent = "No source-backed offers stored yet";
+      const hint = document.createElement("p");
+      hint.textContent = "Search a product above to retrieve provider-reported offers. The dashboard never fills empty states with fictional products.";
+      empty.append(title, hint);
+      grid.appendChild(empty);
     }
-    showMessage("overview-status", "All displayed prices come from timestamped source responses stored in SQLite.");
+    showMessage("overview-status",
+      "Local database refreshed. All displayed prices are timestamped source-attributed observations.");
   } catch (error) {
     showMessage("overview-status", "Unable to load local source records: " + error.message);
   }
@@ -529,3 +647,23 @@ $("learning-forget").addEventListener("click", async () => {
 
 refreshConfiguration();
 refreshLearning();
+
+
+// The only new interactions are presentation shortcuts. Server actions and
+// consent requirements still use their existing verified API endpoints.
+for (const chip of document.querySelectorAll("[data-search]")) {
+  chip.addEventListener("click", () => {
+    $("search-query").value = chip.dataset.search;
+    $("search-query").focus();
+  });
+}
+for (const example of document.querySelectorAll("[data-command]")) {
+  example.addEventListener("click", () => {
+    $("assistant-command").value = example.dataset.command;
+    $("assistant-command").dispatchEvent(new Event("input", {bubbles: true}));
+    $("assistant-command").focus();
+  });
+}
+$("offers-refresh").addEventListener("click", () => {
+  renderOverview();
+});
