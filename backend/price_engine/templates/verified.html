@@ -3,140 +3,200 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Price Agent | Real Offer History</title>
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#080b11">
+  <meta name="description" content="Price Signal verified offers — source-attributed research, stored history, local watches and preferences.">
+  <title>Verified Intelligence — Price Signal</title>
+  <link rel="icon" type="image/svg+xml" href="/static/intelligence-favicon.svg">
   <link rel="stylesheet" href="/static/verified.css">
   <script defer src="/static/verified.js"></script>
 </head>
 <body>
-  <header>
-    <div>
-      <p class="eyebrow">PRICE AGENT / VERIFIED PIPELINE</p>
-      <h1>Source-attributed price intelligence</h1>
-      <p class="muted">Provider-reported prices, not independently verified merchant quotations.</p>
-    </div>
-    <nav aria-label="Project navigation"><a href="/">History</a><a href="/catalog">Catalog</a><a href="/workspace">Workspace</a></nav>
-  </header>
-  <main>
-    <section aria-labelledby="research-title" class="panel">
-      <h2 id="research-title">Search real provider offers</h2>
-      <p class="muted">An explicit search contacts SerpApi and stores only source-attributed results. It does not invent prices if the provider is unavailable. Private SerpApi credentials are required on the server.</p>
-      <form id="search-form">
-        <label for="search-query">Product search</label>
-        <div class="fields">
-          <input id="search-query" name="query" type="search" minlength="2" maxlength="120" placeholder="e.g. wireless keyboard" required>
-          <input id="search-budget" name="budget" type="text" inputmode="decimal" value="60000" maxlength="30" aria-label="Search budget in selected currency" required>
-          <select id="search-currency" name="currency" aria-label="Search currency"><option value="INR">INR</option><option value="USD">USD</option></select>
-          <button type="submit">Search &amp; store</button>
-        </div>
-      </form>
-      <p id="search-status" role="status" aria-live="polite"></p>
-      <p id="api-config-status" class="muted" role="status">Checking local API configuration without contacting providers…</p>
-    </section>
-    <section class="panel" aria-labelledby="assistant-title">
-      <h2 id="assistant-title">Natural-language shopping commands</h2>
-      <p class="muted">Supported: “watch headphones below ₹3000”, “notify me when laptop drops below ₹60000”, or “compare headphones under ₹3000”. Unknown instructions are rejected rather than guessed.</p>
-      <form id="assistant-plan-form">
-        <label for="assistant-command">Enter one supported command</label>
-        <div class="fields">
-          <input id="assistant-command" type="text" minlength="8" maxlength="250" required placeholder="compare headphones under ₹3000">
-          <button type="submit">Preview plan</button>
-        </div>
-      </form>
-      <p id="assistant-status" role="status" aria-live="polite"></p>
-      <pre id="assistant-preview" class="command-preview" aria-label="Parsed command plan"></pre>
-      <button id="assistant-confirm" type="button" disabled>Run approved command</button>
-      <p class="muted">Creating a watch needs an additional confirmation. The command planner never buys products, starts background jobs or invents prices.</p>
-    </section>
-    <section aria-labelledby="compare-title" class="panel">
-      <h2 id="compare-title">Compare saved provider offers</h2>
-      <p class="muted">Read-only research. Products with different retailer IDs or variants are never assumed identical, even if their names are similar.</p>
-      <form id="compare-form">
-        <div class="fields">
-          <input id="compare-query" type="search" minlength="2" maxlength="120" placeholder="Search saved product names" aria-label="Saved product query" required>
-          <input id="compare-budget" type="text" inputmode="decimal" maxlength="30" value="60000" aria-label="Comparison budget" required>
-          <select id="compare-currency" aria-label="Currency"><option value="INR">INR</option><option value="USD">USD</option></select>
-          <button type="submit">Compare stored offers</button>
-        </div>
-      </form>
-      <p id="compare-status" role="status" aria-live="polite"></p>
-      <div class="scroll"><table><thead><tr><th>Product</th><th>Merchant</th><th>Price</th><th>Freshness</th><th>Assessment</th></tr></thead><tbody id="comparison-body"></tbody></table></div>
-    </section>
-    <section aria-labelledby="learning-title" class="panel">
-      <h2 id="learning-title">Opt-in local learning</h2>
-      <p class="muted">Remember explicit product likes/dislikes on this device only. Google Shopping results use the existing SerpApi adapter and remain source-attributed observations, never instructions. This is preference ranking, not model retraining or automatic website scraping.</p>
-      <p id="learning-status" role="status" aria-live="polite">Checking local learning status…</p>
-      <div class="fields">
-        <button id="learning-enable" type="button">Enable preferences</button>
-        <button id="learning-disable" type="button">Pause preferences</button>
-        <button id="learning-clear" type="button">Erase my preferences</button>
+  <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-dashboard" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 19h18M5 16l5-5 4 3 6-8"/><path d="M16 6h4v4"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 16l9 5 9-5"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 19 19 5M8 5h11v11"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 2 9 4v6c0 6-4 9-9 10-5-1-9-4-9-10V6l9-4Z"/><path d="m8 12 3 3 5-6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></symbol>
+    <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 4 18 4 18 0V5M3 12c0 4 18 4 18 0"/></symbol>
+  </svg>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="app-shell" id="top">
+    <aside class="sidebar">
+      <a class="brand" href="/verified" aria-label="Price Signal Verified dashboard">
+        <span class="brand-mark" aria-hidden="true"><span class="brand-core"></span><span class="brand-ring"></span></span>
+        <span class="brand-words"><strong>PRICE<span>SIGNAL</span></strong><small>VERIFIED INTELLIGENCE</small></span>
+      </a>
+      <p class="nav-caption">YOUR WORKSPACE</p>
+      <nav class="navigation" aria-label="Dashboard sections">
+        <a class="nav-link selected" href="#overview" aria-current="page"><svg><use href="#i-dashboard"></use></svg> Overview <span class="nav-dot"></span></a>
+        <a class="nav-link" href="#discovery"><svg><use href="#i-search"></use></svg> Live discovery</a>
+        <a class="nav-link" href="#saved"><svg><use href="#i-layers"></use></svg> Saved offers</a>
+        <a class="nav-link" href="#analysis"><svg><use href="#i-chart"></use></svg> Price intelligence</a>
+        <a class="nav-link" href="#research"><svg><use href="#i-settings"></use></svg> Comparisons</a>
+        <a class="nav-link" href="#watchlist"><svg><use href="#i-bell"></use></svg> Watchlist</a>
+        <a class="nav-link" href="#assistant"><svg><use href="#i-spark"></use></svg> Command assistant</a>
+        <a class="nav-link" href="#preferences"><svg><use href="#i-database"></use></svg> Preferences</a>
+      </nav>
+      <p class="nav-caption second-caption">EXPLORE</p>
+      <nav class="navigation" aria-label="Other Price Signal pages">
+        <a class="nav-link" href="/intelligence"><svg><use href="#i-spark"></use></svg> Intelligence Studio <svg class="link-arrow"><use href="#i-arrow"></use></svg></a>
+        <a class="nav-link" href="/workspace"><svg><use href="#i-layers"></use></svg> Data workspace</a>
+        <a class="nav-link" href="/catalog"><svg><use href="#i-search"></use></svg> Product catalog</a>
+        <a class="nav-link" href="/"><svg><use href="#i-chart"></use></svg> Legacy history</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-console">
+        <div class="console-caption"><span class="online-dot"></span> LOCAL DATABASE</div>
+        <strong><span id="sidebar-offer-count">—</span><small> OFFERS</small></strong>
+        <p>Stored provider observations. Not seller-verified.</p>
+        <div class="console-line"><span>External requests</span><span>Explicit only</span></div>
       </div>
-      <p id="learning-selected" class="muted">Select an observed offer below to give feedback.</p>
-      <div class="fields">
-        <button id="learning-prefer" type="button">Prefer selected offer</button>
-        <button id="learning-avoid" type="button">Avoid selected offer</button>
-        <button id="learning-forget" type="button">Forget selected offer</button>
+      <div class="sidebar-profile">
+        <span class="profile-avatar" aria-hidden="true">PS</span>
+        <div><strong>Research workspace</strong><small>Private / localhost</small></div>
+        <svg aria-hidden="true"><use href="#i-chevron"></use></svg>
       </div>
-      <p id="learning-feedback-status" role="status" aria-live="polite"></p>
-      <p class="muted">Feedback never changes prices, stock, deal verdicts, or source evidence. To review personalized ordering, run “Compare stored offers” after saving preferences. Clearing deletes feedback only, not historical price observations.</p>
-      <p id="learning-ranked" class="muted">Personalized order appears here after comparison when learning is enabled.</p>
-    </section>
-    <section aria-labelledby="watch-title" class="panel">
-      <h2 id="watch-title">Watchlist &amp; opt-in alerts</h2>
-      <p class="muted">Creating a watch does not start a worker. Start the monitor separately with <code>python price_watch.py --db tracker.sqlite3 run</code>. Delivery also requires a separately started worker and private credentials.</p>
-      <form id="watch-form">
-        <div class="fields">
-          <input id="watch-query" type="text" minlength="2" maxlength="120" placeholder="Product query to track" aria-label="Product to watch" required>
-          <input id="watch-budget" type="text" inputmode="decimal" value="60000" maxlength="30" aria-label="Watch price threshold" required>
-          <select id="watch-currency" aria-label="Watch currency"><option value="INR">INR</option><option value="USD">USD</option></select>
-          <select id="watch-interval" aria-label="Check interval"><option value="60">Hourly</option><option value="360">Every six hours</option><option value="1440">Daily</option></select>
-          <button type="submit">Save watch</button>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Workspace</span><svg aria-hidden="true"><use href="#i-chevron"></use></svg><strong>Verified intelligence</strong></div>
+        <div class="top-actions">
+          <span class="market-caption"><span class="market-dot"></span> PROVIDER-REPORTED DATA</span>
+          <a class="top-action" href="/intelligence" title="Open the fictional Intelligence Studio">Studio <svg aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+          <a class="top-cta" href="#discovery"><svg aria-hidden="true"><use href="#i-search"></use></svg> Search offers</a>
+          <span class="header-avatar" aria-label="Local research workspace">PS</span>
         </div>
-      </form>
-      <p id="watch-status" role="status" aria-live="polite"></p>
-      <div class="scroll"><table><thead><tr><th>Query</th><th>Budget</th><th>Status</th><th>Actions</th></tr></thead><tbody id="watches-body"></tbody></table></div>
-      <p class="muted">Email and Telegram notifications require manual opt-in per watch and private server configuration. No automatic purchases are performed.</p>
-    </section>
-    <section aria-labelledby="summary-title" class="panel">
-      <h2 id="summary-title">Recorded evidence</h2>
-      <div class="metrics">
-        <div><strong id="offer-count">—</strong><span>Offers observed</span></div>
-        <div><strong id="observation-count">—</strong><span>Source observations</span></div>
-        <div><strong id="latest-record">—</strong><span>Latest provider timestamp (UTC)</span></div>
-      </div>
-      <p id="overview-status" role="status">Loading stored records…</p>
-    </section>
-    <div class="columns">
-      <section class="panel" aria-labelledby="offers-title">
-        <h2 id="offers-title">Products from stored provider responses</h2>
-        <p class="muted">No sample products are generated when the database is empty.</p>
-        <div class="scroll">
-          <table><thead><tr><th>Product</th><th>Merchant</th><th>Last price</th><th>Stock</th><th>Inspect</th></tr></thead>
-          <tbody id="offers-body"></tbody></table>
-        </div>
-      </section>
-      <section class="panel" aria-labelledby="analysis-title">
-        <h2 id="analysis-title">30-day deal analysis</h2>
-        <p id="selection" class="muted">Select a persisted offer from the table.</p>
-        <form id="budget-form">
-          <label for="budget">Your budget</label>
-          <div class="fields">
-            <select id="currency" aria-label="Budget currency"><option value="INR">INR</option><option value="USD">USD</option></select>
-            <input id="budget" type="text" inputmode="decimal" value="60000" maxlength="30" required pattern="[0-9,]+(\.[0-9]{1,2})?">
-            <button type="submit">Analyze</button>
+      </header>
+
+      <main class="content" id="main-content">
+        <div class="page-eyebrow"><span class="tiny-cross">✳</span> PRICE AGENT <span class="dot-separator"></span> SOURCE-ATTRIBUTED RESEARCH / LOCAL-FIRST</div>
+
+        <section class="hero" id="discovery" aria-labelledby="hero-title">
+          <div class="hero-glow" aria-hidden="true"><div class="glow-ring ring-a"></div><div class="glow-ring ring-b"></div><div class="glow-ring ring-c"></div><div class="glow-chip"><span class="chip-grid"></span></div><div class="float-tag">REAL PROVIDER DATA <span>↗</span></div></div>
+          <div class="hero-content">
+            <div class="hero-pill"><span class="pulse"></span> VERIFIED PIPELINE <span class="hero-plus">+</span></div>
+            <h1 id="hero-title">Real research.<br><em>Clearer decisions.</em></h1>
+            <p>Search Google Shopping via SerpApi. Compare source-attributed offers and build price history, without inventing missing evidence.</p>
+            <p class="search-lead">Search real provider offers</p>
+            <form id="search-form" class="search-area" role="search">
+              <label class="sr-only" for="search-query">Search Google Shopping offers</label>
+              <div class="search-line">
+                <svg class="search-glyph" aria-hidden="true"><use href="#i-search"></use></svg>
+                <input id="search-query" name="query" type="search" minlength="2" maxlength="120" placeholder="What product are you researching?" autocomplete="off" required>
+                <button type="submit" class="search-submit"><span>Search live</span><svg aria-hidden="true"><use href="#i-arrow"></use></svg></button>
+              </div>
+              <div class="search-options">
+                <label for="search-budget">MAX BUDGET <input id="search-budget" name="budget" type="text" inputmode="decimal" value="3000" maxlength="30" required aria-label="Maximum budget"></label>
+                <label for="search-currency">CURRENCY <select id="search-currency" name="currency" aria-label="Search currency"><option value="INR">INR ₹</option><option value="USD">USD $</option></select></label>
+                <span class="search-option-note">No network request until you search.</span>
+              </div>
+            </form>
+            <div class="suggestions"><span>TRY SEARCHING</span><button type="button" class="prompt-chip" data-search="gaming mouse">Gaming mouse</button><button type="button" class="prompt-chip" data-search="wireless keyboard">Wireless keyboard</button><button type="button" class="prompt-chip" data-search="headphones">Headphones</button></div>
+            <p id="search-status" role="status" aria-live="polite" class="search-status"></p>
           </div>
-        </form>
-        <p id="decision" role="status" aria-live="polite"></p>
-        <ul id="checks" aria-label="Analysis evidence checks"></ul>
-        <h3>Recent recorded prices</h3>
-        <canvas id="history-chart" width="740" height="260" role="img" aria-label="Price history chart"></canvas>
-        <p id="history-text" class="muted">No offer selected.</p>
-        <h3>90-day recorded price intelligence</h3>
-        <p class="muted">Daily observations and fixed anomaly heuristics; no interpolated dates, forecasts, seller trust score or verified live prices.</p>
-        <div id="intelligence-results" role="status" aria-live="polite">Select an offer to inspect source evidence.</div>
-        <div id="intelligence-days" class="muted"></div>
-      </section>
+          <div class="hero-bottom"><span><svg aria-hidden="true"><use href="#i-shield"></use></svg> Provider-reported prices, not independently verified merchant quotations.</span><span>SERPAPI / EXPLICIT QUERY</span></div>
+        </section>
+
+        <section class="overview-area" id="overview" aria-labelledby="overview-title">
+          <div class="section-heading"><div><span class="section-kicker">AT A GLANCE</span><h2 id="overview-title">Your research overview</h2><p>Current local SQLite records, not a simulated product universe.</p></div><span class="section-aside">Updated from stored evidence <span class="mini-dot"></span></span></div>
+          <div class="metrics">
+            <div class="metric-card metric-purple"><div class="metric-top"><span>OBSERVED OFFERS</span><svg aria-hidden="true"><use href="#i-layers"></use></svg></div><strong id="offer-count">—</strong><span class="metric-note">Distinct provider listings</span><span class="metric-accent"></span></div>
+            <div class="metric-card metric-teal"><div class="metric-top"><span>PRICE OBSERVATIONS</span><svg aria-hidden="true"><use href="#i-chart"></use></svg></div><strong id="observation-count">—</strong><span class="metric-note">Source-attributed events</span><span class="metric-accent"></span></div>
+            <div class="metric-card metric-blue"><div class="metric-top"><span>LATEST SOURCE RECORD</span><svg aria-hidden="true"><use href="#i-clock"></use></svg></div><strong class="metric-date" id="latest-record">—</strong><span class="metric-note">Timestamp displayed in local time</span><span class="metric-accent"></span></div>
+          </div>
+          <p id="overview-status" class="section-status" role="status" aria-live="polite">Loading local evidence…</p>
+        </section>
+
+        <section class="results-section" id="saved" aria-labelledby="offers-title">
+          <div class="section-heading"><div><span class="section-kicker">SOURCE LIBRARY</span><h2 id="offers-title">Stored product offers</h2><p>Real provider responses saved locally. Listings may be different variants.</p></div><div class="heading-actions"><button type="button" id="offers-refresh" class="secondary-button"><svg aria-hidden="true"><use href="#i-chart"></use></svg> Refresh records</button><a href="#research" class="text-link">Compare saved <svg aria-hidden="true"><use href="#i-arrow"></use></svg></a></div></div>
+          <div class="results-meta"><span class="results-meta-label"><span class="mini-dot"></span> PROVIDER-REPORTED / NOT INDEPENDENTLY VERIFIED</span><span>Choose an offer to inspect its actual recorded history</span></div>
+          <div id="offers-body" class="offer-grid" role="list" aria-label="Stored source-attributed offers"><div class="empty-state">Loading saved offers…</div></div>
+        </section>
+
+        <section class="details-grid" id="analysis" aria-labelledby="analysis-title">
+          <div class="panel analysis-panel">
+            <div class="panel-heading"><div><span class="section-kicker">EVIDENCE REVIEW</span><h2 id="analysis-title">Price intelligence</h2><p id="selection" class="muted">Select a stored offer from the cards above.</p></div><span class="panel-icon"><svg aria-hidden="true"><use href="#i-chart"></use></svg></span></div>
+            <form id="budget-form" class="inline-form">
+              <label for="budget">YOUR BUDGET</label>
+              <div class="inline-fields"><select id="currency" aria-label="Budget currency"><option value="INR">INR ₹</option><option value="USD">USD $</option></select><input id="budget" type="text" inputmode="decimal" value="3000" maxlength="30" required pattern="[0-9,]+(\.[0-9]{1,2})?" aria-label="Analysis budget"><button type="submit" class="primary-button">Analyze</button></div>
+            </form>
+            <p id="decision" class="analysis-decision" role="status" aria-live="polite">Deal qualification requires source-backed evidence.</p>
+            <ul id="checks" class="checks-list" aria-label="Price-analysis evidence checks"></ul>
+            <div class="chart-heading"><h3>Recorded price history <span>30 days</span></h3><small>Stored observations only</small></div>
+            <canvas id="history-chart" width="740" height="260" role="img" aria-label="30-day recorded provider price history"></canvas>
+            <p id="history-text" class="muted chart-note">No offer selected.</p>
+            <div class="subsection"><h3>Historical signal quality <span>90 days</span></h3><p class="muted">Daily observations and fixed anomaly heuristics. No forecasts, fabricated dates or verified merchant trust scores.</p><div id="intelligence-results" class="insight-summary" role="status" aria-live="polite">Choose an offer to inspect source evidence.</div><div id="intelligence-days" class="muted"></div></div>
+          </div>
+          <aside class="insight-column" aria-label="Evidence and provider status">
+            <div class="side-panel signal-panel"><div class="signal-head"><span><span class="online-dot"></span> DATA PROVENANCE</span><svg aria-hidden="true"><use href="#i-shield"></use></svg></div><h3>Evidence first.</h3><p>The analysis engine does not promote unknown stock, incomplete history or missing ratings into confirmed deals.</p><div class="signal-steps"><div><strong>01</strong><span>Source observation</span><small>Recorded</small></div><div><strong>02</strong><span>Historical checks</span><small>Deterministic</small></div><div><strong>03</strong><span>Deal outcome</span><small>Fail closed</small></div></div></div>
+            <div class="side-panel config-panel"><div class="signal-head"><span>INTEGRATION HEALTH</span><svg aria-hidden="true"><use href="#i-settings"></use></svg></div><h3>Provider readiness</h3><p id="api-config-status" role="status" aria-live="polite">Checking credential presence without contacting providers…</p><small>Configured ≠ verified. Credentials are never displayed.</small></div>
+            <div class="side-panel tip-panel"><span class="section-kicker">HOW IT WORKS</span><h3>A price under budget is not necessarily a deal.</h3><p>A verified alert needs adequate historical depth, qualifying seller information, and confirmed stock in addition to price.</p><a href="#watchlist" class="text-link">Set a watch <svg aria-hidden="true"><use href="#i-arrow"></use></svg></a></div>
+          </aside>
+        </section>
+
+        <section id="research" class="section-card" aria-labelledby="compare-title">
+          <div class="section-heading compact"><div><span class="section-kicker">PRICE RESEARCH</span><h2 id="compare-title">Compare saved offers</h2><p>Read-only comparison; distinct retailer IDs and product variants are not assumed equivalent.</p></div></div>
+          <form id="compare-form" class="form-grid compare-controls">
+            <label>PRODUCT KEYWORD<input id="compare-query" type="search" minlength="2" maxlength="120" placeholder="e.g. gaming mouse" aria-label="Saved product query" required></label>
+            <label>MAX BUDGET<input id="compare-budget" type="text" inputmode="decimal" maxlength="30" value="3000" aria-label="Comparison budget" required></label>
+            <label>CURRENCY<select id="compare-currency" aria-label="Currency"><option value="INR">INR ₹</option><option value="USD">USD $</option></select></label>
+            <button type="submit" class="primary-button">Compare saved</button>
+          </form>
+          <p id="compare-status" class="section-status" role="status" aria-live="polite"></p>
+          <div class="table-scroll"><table><thead><tr><th>Product</th><th>Merchant</th><th>Observed price</th><th>Freshness</th><th>Assessment</th></tr></thead><tbody id="comparison-body"><tr><td colspan="5" class="table-empty">Run a comparison to view stored offers.</td></tr></tbody></table></div>
+        </section>
+
+        <div class="workflow-grid">
+          <section id="watchlist" class="section-card" aria-labelledby="watch-title">
+            <div class="section-heading compact"><div><span class="section-kicker">AUTOMATION / OPT-IN</span><h2 id="watch-title">Watchlist &amp; alerts</h2><p>Manage saved watch rules and opt-in alerts. Monitoring and delivery workers never start just by creating a watch.</p></div><span class="panel-icon"><svg aria-hidden="true"><use href="#i-bell"></use></svg></span></div>
+            <form id="watch-form" class="form-grid watch-controls">
+              <label>PRODUCT QUERY<input id="watch-query" type="text" minlength="2" maxlength="120" placeholder="Gaming mouse" aria-label="Product to watch" required></label>
+              <label>ALERT BELOW<input id="watch-budget" type="text" inputmode="decimal" value="3000" maxlength="30" aria-label="Watch price threshold" required></label>
+              <label>CURRENCY<select id="watch-currency" aria-label="Watch currency"><option value="INR">INR ₹</option><option value="USD">USD $</option></select></label>
+              <label>CHECK FREQUENCY<select id="watch-interval" aria-label="Check interval"><option value="60">Hourly</option><option value="360">Every 6 hours</option><option value="1440">Daily</option></select></label>
+              <button type="submit" class="primary-button">Save watch</button>
+            </form>
+            <p id="watch-status" class="section-status" role="status" aria-live="polite"></p>
+            <div class="table-scroll"><table><thead><tr><th>Query</th><th>Threshold</th><th>Status</th><th>Actions</th></tr></thead><tbody id="watches-body"><tr><td colspan="4" class="table-empty">Loading saved watches…</td></tr></tbody></table></div>
+            <p class="muted foot-note">Start monitoring with <code>python price_watch.py --db tracker.sqlite3 run</code>. Email and Telegram also require explicit opt-in, configured credentials and a separately started worker. No purchases are performed.</p>
+          </section>
+
+          <section id="assistant" class="section-card" aria-labelledby="assistant-title">
+            <div class="section-heading compact"><div><span class="section-kicker">DETERMINISTIC ASSISTANT</span><h2 id="assistant-title">Shopping command assistant</h2><p>Preview exactly what a command will do before approving it.</p></div><span class="panel-icon"><svg aria-hidden="true"><use href="#i-spark"></use></svg></span></div>
+            <form id="assistant-plan-form">
+              <label for="assistant-command" class="field-caption">ENTER ONE SUPPORTED COMMAND</label>
+              <div class="assistant-input"><input id="assistant-command" type="text" minlength="8" maxlength="250" placeholder="compare headphones under ₹3000" required><button type="submit" class="primary-button">Preview plan</button></div>
+            </form>
+            <p class="muted example-line">Try <button type="button" class="inline-example" data-command="compare gaming mouse under ₹3000">compare gaming mouse under ₹3000</button> or <button type="button" class="inline-example" data-command="watch headphones below ₹3000">watch headphones below ₹3000</button>.</p>
+            <p id="assistant-status" class="section-status" role="status" aria-live="polite"></p>
+            <pre id="assistant-preview" class="command-preview" aria-label="Parsed command plan"></pre>
+            <button id="assistant-confirm" type="button" class="secondary-button" disabled>Run approved command</button>
+            <p class="muted foot-note">Unsupported commands are rejected. Creating watches requires additional confirmation; the agent never buys products or starts background jobs.</p>
+          </section>
+        </div>
+
+        <section id="preferences" class="section-card preferences-panel" aria-labelledby="learning-title">
+          <div class="section-heading compact"><div><span class="section-kicker">PRIVACY-FIRST PERSONALIZATION</span><h2 id="learning-title">Your preference memory</h2><p>Opt-in local PREFER / AVOID feedback on actual stored provider offers. Never changes price evidence or trains model weights.</p></div><span class="panel-icon"><svg aria-hidden="true"><use href="#i-database"></use></svg></span></div>
+          <div class="preferences-layout">
+            <div>
+              <p id="learning-status" class="learning-state" role="status" aria-live="polite">Checking local learning status…</p>
+              <div class="button-row"><button id="learning-enable" type="button" class="primary-button">Enable preferences</button><button id="learning-disable" type="button" class="secondary-button">Pause</button><button id="learning-clear" type="button" class="danger-button">Erase feedback</button></div>
+              <div class="selection-card"><div><span>SELECTED OFFER</span><p id="learning-selected">Select a saved offer in the product library to give feedback.</p></div><div class="button-row"><button id="learning-prefer" type="button" class="secondary-button">Prefer selected</button><button id="learning-avoid" type="button" class="secondary-button">Avoid selected</button><button id="learning-forget" type="button" class="text-button">Forget vote</button></div><p id="learning-feedback-status" role="status" aria-live="polite"></p></div>
+            </div>
+            <aside class="personalization-details"><div class="signal-head"><span><span class="online-dot"></span> PERSONALIZED ORDER</span><svg aria-hidden="true"><use href="#i-spark"></use></svg></div><h3>Train preferences, not the price.</h3><p id="learning-ranked">Run a stored-offer comparison after saving preferences to see your personalized ranking here.</p><small>Feedback is separate from factual comparisons, historical deal verdicts, and source provenance. Erasing preferences does not delete price history.</small></aside>
+          </div>
+        </section>
+        <footer class="footer"><span><span class="footer-mark">✳</span> PRICE SIGNAL</span><span>PROVIDER-REPORTED · NOT INDEPENDENTLY VERIFIED · SINGLE-OPERATOR LOCAL WORKSPACE</span><a href="#top">Back to top ↑</a></footer>
+      </main>
     </div>
-  </main>
-  <footer>Local-first project. Prices are not guaranteed current. No model-generated prices appear in this view.</footer>
+  </div>
 </body>
 </html>

@@ -4,6 +4,8 @@ Start at the [repository README](../README.md) for current setup, features and C
 
 ## Guides
 
+- [Verified Studio redesign](guides/verified-studio-redesign.md) — source-backed dashboard UI, user controls and setup.
+
 - [Open Food Facts catalog import](guides/open-food-facts-catalog.md) — source, license, import commands, actual-count limitations.
 - [Local data workspace](guides/data-workspace.md) — CSV/JSON/XLSX upload, provider lookup, and compatibility notes (historical overlay guide).
 - [Virtual Intelligence Studio](guides/virtual-intelligence-studio.md) — fictional virtual products, worker architecture and UI controls.
